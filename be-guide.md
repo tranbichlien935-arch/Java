@@ -53,7 +53,269 @@
 
 ---
 
-## 🛠️ Công Nghệ Sử Dụng
+## 🔐 Xác Thực & Phân Quyền (Authentication & Authorization)
+
+### Tổng Quan Hệ Thống User
+
+Hệ thống hỗ trợ **3 loại người dùng** với các quyền hạn khác nhau:
+
+| Loại User | Mô Tả | Quyền Hạn |
+|-----------|-------|-----------|
+| **ADMIN** | Quản trị viên hệ thống | Toàn quyền: CRUD tất cả entities, quản lý users |
+| **TEACHER** (Giáo Viên) | Giảng viên các khóa học | Quản lý khóa học, xem danh sách sinh viên, chấm điểm |
+| **STUDENT** (Học Viên) | Sinh viên đăng ký học | Xem khóa học, đăng ký môn học, xem điểm |
+
+### Database Schema
+
+#### Bảng `users` - Người dùng
+
+| Cột | Kiểu dữ liệu | Mô tả |
+|-----|--------------|-------|
+| id | BIGINT (PK) | ID tự tăng |
+| username | VARCHAR(50) | Tên đăng nhập (unique) |
+| email | VARCHAR(100) | Email (unique) |
+| password | VARCHAR(255) | Mật khẩu đã mã hóa |
+| full_name | VARCHAR(100) | Họ tên đầy đủ |
+| phone | VARCHAR(20) | Số điện thoại |
+| avatar_url | VARCHAR(500) | URL ảnh đại diện |
+| is_active | BOOLEAN | Trạng thái hoạt động (default: true) |
+| created_at | TIMESTAMP | Ngày tạo |
+| updated_at | TIMESTAMP | Ngày cập nhật |
+
+---
+
+#### Bảng `roles` - Vai trò
+
+| Cột | Kiểu dữ liệu | Mô tả |
+|-----|--------------|-------|
+| id | BIGINT (PK) | ID tự tăng |
+| name | VARCHAR(50) | ROLE_ADMIN, ROLE_TEACHER, ROLE_STUDENT |
+| description | VARCHAR(255) | Mô tả vai trò |
+
+---
+
+#### Bảng `user_roles` - Quan hệ User-Role (Many-to-Many)
+
+| Cột | Kiểu dữ liệu | Mô tả |
+|-----|--------------|-------|
+| user_id | BIGINT (FK) | → users.id |
+| role_id | BIGINT (FK) | → roles.id |
+
+---
+
+#### Bảng `teachers` - Thông tin Giáo viên
+
+| Cột | Kiểu dữ liệu | Mô tả |
+|-----|--------------|-------|
+| id | BIGINT (PK) | ID tự tăng |
+| user_id | BIGINT (FK, unique) | → users.id |
+| employee_code | VARCHAR(20) | Mã nhân viên (unique) |
+| department | VARCHAR(100) | Khoa/Bộ môn |
+| specialization | VARCHAR(200) | Chuyên môn |
+| hire_date | DATE | Ngày vào làm |
+
+---
+
+#### Bảng `students` - Thông tin Học viên
+
+| Cột | Kiểu dữ liệu | Mô tả |
+|-----|--------------|-------|
+| id | BIGINT (PK) | ID tự tăng |
+| user_id | BIGINT (FK, unique) | → users.id |
+| student_code | VARCHAR(20) | Mã học viên (unique) |
+| date_of_birth | DATE | Ngày sinh |
+| gender | ENUM | 'MALE', 'FEMALE', 'OTHER' |
+| address | VARCHAR(500) | Địa chỉ |
+| enrollment_date | DATE | Ngày đăng ký học |
+
+---
+
+#### Bảng `courses` - Khóa học
+
+| Cột | Kiểu dữ liệu | Mô tả |
+|-----|--------------|-------|
+| id | BIGINT (PK) | ID tự tăng |
+| code | VARCHAR(20) | Mã khóa học (unique) |
+| name | VARCHAR(200) | Tên khóa học |
+| description | TEXT | Mô tả chi tiết |
+| price | DECIMAL(12,2) | Giá tiền (VND) |
+| duration | INT | Thời lượng (số buổi học) |
+| level | ENUM | 'BEGINNER', 'INTERMEDIATE', 'ADVANCED' |
+| thumbnail_url | VARCHAR(500) | Ảnh thumbnail |
+| is_active | BOOLEAN | Trạng thái (default: true) |
+| created_at | TIMESTAMP | Ngày tạo |
+| updated_at | TIMESTAMP | Ngày cập nhật |
+
+---
+
+#### Bảng `classes` - Lớp học
+
+| Cột | Kiểu dữ liệu | Mô tả |
+|-----|--------------|-------|
+| id | BIGINT (PK) | ID tự tăng |
+| code | VARCHAR(20) | Mã lớp học (unique) |
+| name | VARCHAR(200) | Tên lớp (VD: "Java Spring - Lớp 1") |
+| course_id | BIGINT (FK) | → courses.id |
+| teacher_id | BIGINT (FK) | → teachers.id (Giáo viên phụ trách) |
+| max_students | INT | Sỉ số tối đa (default: 30) |
+| current_students | INT | Số học viên hiện tại (default: 0) |
+| room | VARCHAR(50) | Phòng học |
+| schedule | VARCHAR(200) | Lịch học (VD: "T2, T4, T6 - 19:00-21:00") |
+| start_date | DATE | Ngày bắt đầu |
+| end_date | DATE | Ngày kết thúc |
+| status | ENUM | 'OPEN', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED' |
+| is_registration_open | BOOLEAN | Cho phép đăng ký (default: true) |
+| created_at | TIMESTAMP | Ngày tạo |
+
+**Rules:**
+- `current_students <= max_students`
+- Khi học viên đăng ký → tự động tăng `current_students`
+- Khi `current_students >= max_students` → `is_registration_open = false`
+
+---
+
+#### Bảng `enrollments` - Đăng ký học
+
+| Cột | Kiểu dữ liệu | Mô tả |
+|-----|--------------|-------|
+| id | BIGINT (PK) | ID tự tăng |
+| student_id | BIGINT (FK) | → students.id |
+| class_id | BIGINT (FK) | → classes.id |
+| enrollment_date | TIMESTAMP | Ngày đăng ký |
+| status | ENUM | 'PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED' |
+| note | VARCHAR(500) | Ghi chú |
+
+**Constraints:**
+- UNIQUE(student_id, class_id) - Mỗi học viên chỉ đăng ký 1 lần/lớp
+
+---
+
+#### Bảng `attendance` - Điểm danh
+
+| Cột | Kiểu dữ liệu | Mô tả |
+|-----|--------------|-------|
+| id | BIGINT (PK) | ID tự tăng |
+| class_id | BIGINT (FK) | → classes.id |
+| student_id | BIGINT (FK) | → students.id |
+| session_date | DATE | Ngày buổi học |
+| session_number | INT | Buổi học thứ mấy |
+| status | ENUM | 'PRESENT', 'ABSENT', 'EXCUSED' (Có mặt/Vắng/Có phép) |
+| note | VARCHAR(255) | Ghi chú |
+| marked_by | BIGINT (FK) | → users.id (Teacher đã điểm danh) |
+| marked_at | TIMESTAMP | Thời gian điểm danh |
+
+**Constraints:**
+- UNIQUE(class_id, student_id, session_date) - Mỗi học viên chỉ điểm danh 1 lần/buổi
+
+---
+
+#### Bảng `grades` - Điểm số
+
+| Cột | Kiểu dữ liệu | Mô tả |
+|-----|--------------|-------|
+| id | BIGINT (PK) | ID tự tăng |
+| enrollment_id | BIGINT (FK) | → enrollments.id |
+| attendance_score | DECIMAL(4,2) | Điểm chuyên cần (0-10) |
+| midterm_score | DECIMAL(4,2) | Điểm giữa kỳ (0-10) |
+| final_score | DECIMAL(4,2) | Điểm cuối kỳ (0-10) |
+| total_score | DECIMAL(4,2) | Điểm tổng kết |
+| comment | TEXT | Nhận xét của giáo viên |
+| graded_by | BIGINT (FK) | → users.id (Teacher chấm điểm) |
+| graded_at | TIMESTAMP | Thời gian chấm điểm |
+| updated_at | TIMESTAMP | Cập nhật lần cuối |
+
+**Rules:**
+- Tất cả điểm trong khoảng 0-10
+- `total_score` có thể tính tự động: `(attendance_score * 0.1) + (midterm_score * 0.3) + (final_score * 0.6)`
+
+---
+
+#### Bảng `payments` - Thanh toán học phí
+
+| Cột | Kiểu dữ liệu | Mô tả |
+|-----|--------------|-------|
+| id | BIGINT (PK) | ID tự tăng |
+| enrollment_id | BIGINT (FK) | → enrollments.id |
+| amount | DECIMAL(12,2) | Số tiền (VND) |
+| payment_date | TIMESTAMP | Ngày thanh toán |
+| payment_method | ENUM | 'CASH', 'BANK_TRANSFER', 'CREDIT_CARD' |
+| status | ENUM | 'PENDING', 'COMPLETED', 'FAILED', 'REFUNDED' |
+| transaction_id | VARCHAR(100) | Mã giao dịch |
+| note | VARCHAR(500) | Ghi chú |
+| created_by | BIGINT (FK) | → users.id |
+
+---
+
+### Sơ Đồ Quan Hệ (ERD Summary)
+
+```
+users ──────┬──── user_roles ──── roles
+            │
+            ├──── teachers ─────── classes ─────┬──── enrollments ──── grades
+            │         │                         │         │
+            │         └─────────────────────────┘         │
+            │                                             │
+            └──── students ───────────────────────────────┴──── attendance
+                                                          │
+                                                          └──── payments
+```
+
+**Quan hệ chính:**
+- `users` 1:1 `teachers` hoặc `students`
+- `courses` 1:N `classes`
+- `teachers` 1:N `classes`
+- `students` N:M `classes` (qua `enrollments`)
+- `enrollments` 1:1 `grades`
+- `enrollments` 1:N `payments`
+- `classes` + `students` → `attendance`
+
+---
+
+### Tính Năng Authentication
+
+#### 1. Đăng nhập (Login)
+- **Endpoint**: `POST /api/auth/login`
+- **Input**: username, password
+- **Output**: JWT Token + thông tin user + danh sách roles
+- **Mô tả**: Xác thực người dùng và trả về token
+
+#### 2. Đăng ký (Register)
+- **Endpoint**: `POST /api/auth/register`
+- **Input**: username, email, password, fullName, phone, roles[]
+- **Output**: Thông báo đăng ký thành công
+- **Mô tả**: Tạo tài khoản mới, mặc định role là STUDENT
+
+#### 3. Đăng xuất (Logout)
+- **Endpoint**: `POST /api/auth/logout`
+- **Input**: JWT Token (header)
+- **Output**: Thông báo đăng xuất thành công
+- **Mô tả**: Hủy phiên đăng nhập
+
+#### 4. Lấy thông tin User hiện tại
+- **Endpoint**: `GET /api/auth/me`
+- **Input**: JWT Token (header)
+- **Output**: Thông tin user + roles
+- **Mô tả**: Trả về thông tin của user đang đăng nhập
+
+### Phân Quyền API Endpoints
+
+| URL Pattern | Roles được phép | Mô tả |
+|-------------|-----------------|-------|
+| `/api/auth/**` | Public | Không cần đăng nhập |
+| `/api/admin/**` | ADMIN | Chỉ quản trị viên |
+| `/api/teacher/**` | ADMIN, TEACHER | Admin và giáo viên |
+| `/api/student/**` | ADMIN, TEACHER, STUDENT | Tất cả user đăng nhập |
+| `/api/**` (còn lại) | Authenticated | Cần đăng nhập |
+
+### Công Nghệ Sử Dụng
+
+- **Spring Security**: Framework bảo mật
+- **JWT (JSON Web Token)**: Xác thực stateless
+- **BCrypt**: Mã hóa mật khẩu
+
+---
+
+## �🛠️ Công Nghệ Sử Dụng
 
 ### Framework Backend
 

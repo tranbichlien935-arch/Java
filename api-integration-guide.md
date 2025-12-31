@@ -341,77 +341,200 @@ export default defineConfig({
 
 ## 📡 API Endpoints Mapping
 
-### Bảng Mapping Frontend Service → Backend API
+### 🔐 Authentication APIs
 
-| Frontend Service Method | HTTP Method | Backend Endpoint | Request Body | Response |
-|------------------------|-------------|------------------|--------------|----------|
-| **Students** |
-| `studentService.getAllStudents()` | GET | `/api/students` | - | `Student[]` |
-| `studentService.getStudentById(id)` | GET | `/api/students/{id}` | - | `Student` |
-| `studentService.createStudent(data)` | POST | `/api/students` | `StudentDTO` | `Student` |
-| `studentService.updateStudent(id, data)` | PUT | `/api/students/{id}` | `StudentDTO` | `Student` |
-| `studentService.deleteStudent(id)` | DELETE | `/api/students/{id}` | - | `void` |
-| `studentService.searchStudents(query)` | GET | `/api/students/search?q={query}` | - | `Student[]` |
-| **Courses** |
-| `courseService.getAllCourses()` | GET | `/api/courses` | - | `Course[]` |
-| `courseService.getCourseById(id)` | GET | `/api/courses/{id}` | - | `Course` |
-| `courseService.createCourse(data)` | POST | `/api/courses` | `CourseDTO` | `Course` |
-| `courseService.updateCourse(id, data)` | PUT | `/api/courses/{id}` | `CourseDTO` | `Course` |
-| `courseService.deleteCourse(id)` | DELETE | `/api/courses/{id}` | - | `void` |
-| **Enrollments** |
-| `enrollmentService.getAllEnrollments()` | GET | `/api/enrollments` | - | `Enrollment[]` |
-| `enrollmentService.createEnrollment(data)` | POST | `/api/enrollments` | `EnrollmentDTO` | `Enrollment` |
-| `enrollmentService.deleteEnrollment(id)` | DELETE | `/api/enrollments/{id}` | - | `void` |
+| Method | Endpoint | Mô tả | Request | Response |
+|--------|----------|-------|---------|----------|
+| POST | `/api/auth/login` | Đăng nhập | `{username, password}` | `{accessToken, user}` |
+| POST | `/api/auth/register` | Đăng ký | `{username, email, password, fullName, phone, roles[]}` | `{message}` |
+| POST | `/api/auth/logout` | Đăng xuất | - | `{message}` |
+| GET | `/api/auth/me` | Lấy thông tin user hiện tại | - | `{id, username, email, fullName, roles[]}` |
+| PUT | `/api/auth/profile` | Cập nhật thông tin cá nhân | `{fullName, phone, avatarUrl}` | `{user}` |
+| PUT | `/api/auth/change-password` | Đổi mật khẩu | `{oldPassword, newPassword}` | `{message}` |
 
-### Data Models
+---
 
-#### Student DTO
+### 👑 Admin APIs (`/api/admin/*`)
 
-```javascript
-// Frontend Request
-const studentData = {
-  firstName: "Nguyễn Văn",
-  lastName: "An",
-  email: "nguyenvanan@example.com",
-  phone: "0123456789",
-  dateOfBirth: "2000-01-15" // Format: YYYY-MM-DD
-};
-```
+#### Quản lý Users
 
-```java
-// Backend Entity
-public class Student {
-    private Long id;
-    private String firstName;
-    private String lastName;
-    private String email;
-    private String phone;
-    private LocalDate dateOfBirth;
-    // ... getters/setters
+| Method | Endpoint | Mô tả | Request | Response |
+|--------|----------|-------|---------|----------|
+| GET | `/api/admin/users` | Danh sách users (có phân trang, lọc) | `?page=0&size=10&role=STUDENT` | `Page<User>` |
+| GET | `/api/admin/users/{id}` | Chi tiết user | - | `User` |
+| POST | `/api/admin/users` | Tạo user mới | `{username, email, password, fullName, roles[]}` | `User` |
+| PUT | `/api/admin/users/{id}` | Cập nhật user | `{fullName, phone, isActive}` | `User` |
+| PATCH | `/api/admin/users/{id}/status` | Active/Deactive user | `{isActive: boolean}` | `User` |
+| POST | `/api/admin/users/{id}/reset-password` | Reset mật khẩu | - | `{newPassword}` |
+
+#### Quản lý Courses (Khóa học)
+
+| Method | Endpoint | Mô tả | Request | Response |
+|--------|----------|-------|---------|----------|
+| GET | `/api/admin/courses` | Danh sách khóa học | `?page=0&size=10&isActive=true` | `Page<Course>` |
+| GET | `/api/admin/courses/{id}` | Chi tiết khóa học | - | `Course` |
+| POST | `/api/admin/courses` | Tạo khóa học mới | `{code, name, description, price, duration, level}` | `Course` |
+| PUT | `/api/admin/courses/{id}` | Cập nhật khóa học | `{name, description, price, ...}` | `Course` |
+| PATCH | `/api/admin/courses/{id}/status` | Active/Deactive khóa học | `{isActive: boolean}` | `Course` |
+
+#### Quản lý Classes (Lớp học)
+
+| Method | Endpoint | Mô tả | Request | Response |
+|--------|----------|-------|---------|----------|
+| GET | `/api/admin/classes` | Danh sách lớp học | `?courseId=1&status=OPEN` | `Page<Class>` |
+| GET | `/api/admin/classes/{id}` | Chi tiết lớp học | - | `Class` |
+| POST | `/api/admin/classes` | Tạo lớp học mới | `{courseId, teacherId, maxStudents, room, schedule, startDate}` | `Class` |
+| PUT | `/api/admin/classes/{id}` | Cập nhật lớp học | `{teacherId, room, schedule, ...}` | `Class` |
+| PATCH | `/api/admin/classes/{id}/registration` | Đóng/Mở đăng ký | `{isRegistrationOpen: boolean}` | `Class` |
+| GET | `/api/admin/classes/{id}/students` | Danh sách học viên trong lớp | - | `Student[]` |
+
+#### Thống kê & Báo cáo
+
+| Method | Endpoint | Mô tả | Request | Response |
+|--------|----------|-------|---------|----------|
+| GET | `/api/admin/dashboard/stats` | Thống kê tổng quan | - | `{totalStudents, totalTeachers, totalCourses, totalClasses}` |
+| GET | `/api/admin/reports/revenue` | Doanh thu theo thời gian | `?from=2025-01-01&to=2025-12-31` | `{monthly: [], total}` |
+| GET | `/api/admin/reports/enrollments` | Thống kê đăng ký | `?from=&to=` | `EnrollmentStats[]` |
+| GET | `/api/admin/reports/full-classes` | Lớp đã đầy sỉ số | - | `Class[]` |
+
+---
+
+### 👨‍🏫 Teacher APIs (`/api/teacher/*`)
+
+| Method | Endpoint | Mô tả | Request | Response |
+|--------|----------|-------|---------|----------|
+| GET | `/api/teacher/dashboard` | Dashboard giáo viên | - | `{todayClasses, weekSchedule, totalStudents}` |
+| GET | `/api/teacher/classes` | Danh sách lớp đang dạy | - | `Class[]` |
+| GET | `/api/teacher/classes/{id}` | Chi tiết lớp đang dạy | - | `Class + students[]` |
+| GET | `/api/teacher/classes/{id}/students` | Danh sách học viên của lớp | - | `Student[]` |
+
+#### Điểm danh (Attendance)
+
+| Method | Endpoint | Mô tả | Request | Response |
+|--------|----------|-------|---------|----------|
+| GET | `/api/teacher/classes/{classId}/attendance` | Lịch sử điểm danh | `?date=2025-01-15` | `Attendance[]` |
+| POST | `/api/teacher/classes/{classId}/attendance` | Tạo điểm danh buổi mới | `{sessionDate, sessionNumber, attendances: [{studentId, status, note}]}` | `Attendance[]` |
+| PUT | `/api/teacher/attendance/{id}` | Sửa điểm danh | `{status, note}` | `Attendance` |
+
+#### Chấm điểm (Grades)
+
+| Method | Endpoint | Mô tả | Request | Response |
+|--------|----------|-------|---------|----------|
+| GET | `/api/teacher/classes/{classId}/grades` | Bảng điểm lớp | - | `Grade[]` |
+| POST | `/api/teacher/grades` | Nhập điểm cho học viên | `{enrollmentId, attendanceScore, midtermScore, finalScore, comment}` | `Grade` |
+| PUT | `/api/teacher/grades/{id}` | Sửa điểm | `{attendanceScore, midtermScore, finalScore, comment}` | `Grade` |
+
+---
+
+### 👨‍🎓 Student APIs (`/api/student/*`)
+
+| Method | Endpoint | Mô tả | Request | Response |
+|--------|----------|-------|---------|----------|
+| GET | `/api/student/dashboard` | Dashboard học viên | - | `{enrolledClasses, upcomingSchedule}` |
+
+#### Khóa học & Đăng ký
+
+| Method | Endpoint | Mô tả | Request | Response |
+|--------|----------|-------|---------|----------|
+| GET | `/api/courses` | Danh sách khóa học (Public) | `?level=BEGINNER&priceMin=&priceMax=` | `Course[]` |
+| GET | `/api/courses/{id}` | Chi tiết khóa học | - | `Course + classes[]` |
+| GET | `/api/courses/{courseId}/classes` | Danh sách lớp đang mở | `?isRegistrationOpen=true` | `Class[]` |
+| POST | `/api/student/enroll` | Đăng ký vào lớp | `{classId}` | `Enrollment` |
+| DELETE | `/api/student/enrollments/{id}` | Hủy đăng ký | - | `{message}` |
+
+#### Thời khóa biểu & Kết quả
+
+| Method | Endpoint | Mô tả | Request | Response |
+|--------|----------|-------|---------|----------|
+| GET | `/api/student/schedule` | Thời khóa biểu cá nhân | `?week=current` | `Schedule[]` |
+| GET | `/api/student/enrollments` | Danh sách lớp đã đăng ký | - | `Enrollment[]` |
+| GET | `/api/student/grades` | Kết quả học tập | - | `Grade[]` |
+| GET | `/api/student/attendance` | Lịch sử điểm danh | `?classId=1` | `Attendance[]` |
+| GET | `/api/student/payments` | Lịch sử thanh toán | - | `Payment[]` |
+
+---
+
+### 📝 Data Models (Request/Response)
+
+#### Course
+
+```json
+{
+  "id": 1,
+  "code": "JAVA001",
+  "name": "Lập Trình Java Spring Boot",
+  "description": "Khóa học lập trình Java từ cơ bản đến nâng cao",
+  "price": 5000000,
+  "duration": 30,
+  "level": "INTERMEDIATE",
+  "thumbnailUrl": "/images/java.jpg",
+  "isActive": true
 }
 ```
 
-#### Course DTO
+#### Class
 
-```javascript
-// Frontend Request
-const courseData = {
-  name: "Lập Trình Java",
-  code: "IT001",
-  credits: 3,
-  description: "Khóa học lập trình Java cơ bản"
-};
+```json
+{
+  "id": 1,
+  "code": "JAVA001-L1",
+  "name": "Java Spring Boot - Lớp 1",
+  "courseId": 1,
+  "teacherId": 5,
+  "teacherName": "Nguyễn Văn A",
+  "maxStudents": 30,
+  "currentStudents": 25,
+  "room": "P.301",
+  "schedule": "T2, T4, T6 - 19:00-21:00",
+  "startDate": "2025-02-01",
+  "endDate": "2025-04-30",
+  "status": "OPEN",
+  "isRegistrationOpen": true
+}
 ```
 
-#### Enrollment DTO
+#### Enrollment
 
-```javascript
-// Frontend Request
-const enrollmentData = {
-  studentId: 1,
-  courseId: 2,
-  enrollmentDate: "2025-01-15"
-};
+```json
+{
+  "id": 1,
+  "studentId": 10,
+  "classId": 1,
+  "className": "Java Spring Boot - Lớp 1",
+  "enrollmentDate": "2025-01-15T10:30:00",
+  "status": "CONFIRMED"
+}
+```
+
+#### Attendance
+
+```json
+{
+  "id": 1,
+  "classId": 1,
+  "studentId": 10,
+  "sessionDate": "2025-02-03",
+  "sessionNumber": 1,
+  "status": "PRESENT",
+  "note": ""
+}
+```
+
+#### Grade
+
+```json
+{
+  "id": 1,
+  "enrollmentId": 1,
+  "studentName": "Trần Văn B",
+  "className": "Java Spring Boot - Lớp 1",
+  "attendanceScore": 9.0,
+  "midtermScore": 8.5,
+  "finalScore": 8.0,
+  "totalScore": 8.25,
+  "comment": "Học tập tích cực, cần cải thiện phần backend",
+  "gradedAt": "2025-04-25T14:00:00"
+}
 ```
 
 ---
@@ -595,81 +718,77 @@ const StudentForm = ({ onSuccess }) => {
 
 ---
 
-## 🔐 Xác Thực & Bảo Mật
+## 🔐 Xác Thực & Bảo Mật (Authentication & Authorization)
 
-### 1. JWT Authentication (Backend)
+### Tổng Quan Hệ Thống User
 
-Thêm vào `application.properties`:
+Hệ thống hỗ trợ **3 loại người dùng** với quyền hạn khác nhau:
 
-```properties
-# JWT Configuration
-app.jwt.secret=your-256-bit-secret-key-here-make-it-long-and-random
-app.jwt.expiration=86400000
-# 86400000 = 24 hours in milliseconds
-```
+| Loại User | Mô Tả | Quyền Hạn Frontend |
+|-----------|-------|-------------------|
+| **ADMIN** | Quản trị viên | Truy cập mọi trang, quản lý users, courses, students |
+| **TEACHER** | Giáo viên | Quản lý khóa học của mình, xem/chấm điểm sinh viên |
+| **STUDENT** | Học viên | Xem thông tin cá nhân, đăng ký khóa học, xem điểm |
 
-### 2. Authentication Service (Frontend)
+### Tính Năng Authentication Frontend
 
-Tạo file `src/services/authService.js`:
+#### 1. Đăng nhập (Login)
+- **Gọi API**: `POST /api/auth/login`
+- **Input**: username, password
+- **Xử lý**: Lưu JWT token vào localStorage, redirect theo role
+- **Redirect**: Admin → `/admin/dashboard`, Teacher → `/teacher/dashboard`, Student → `/student/dashboard`
 
-```javascript
-import api from './api';
+#### 2. Đăng ký (Register)
+- **Gọi API**: `POST /api/auth/register`
+- **Input**: username, email, password, fullName, phone, role
+- **Xử lý**: Tạo tài khoản mới, mặc định role là STUDENT
+- **Redirect**: Chuyển đến trang đăng nhập
 
-const AUTH_ENDPOINT = '/auth';
+#### 3. Đăng xuất (Logout)
+- **Gọi API**: `POST /api/auth/logout`
+- **Xử lý**: Xóa token khỏi localStorage, redirect về `/login`
 
-export const authService = {
-  login: async (credentials) => {
-    const response = await api.post(`${AUTH_ENDPOINT}/login`, credentials);
-    const { token, user } = response.data;
-    
-    // Lưu token vào localStorage
-    localStorage.setItem('authToken', token);
-    localStorage.setItem('user', JSON.stringify(user));
-    
-    return response.data;
-  },
+#### 4. Lấy thông tin User hiện tại
+- **Gọi API**: `GET /api/auth/me`
+- **Xử lý**: Lấy thông tin user đang đăng nhập để hiển thị
 
-  logout: () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
-    window.location.href = '/login';
-  },
+### Các Components Cần Xây Dựng
 
-  register: async (userData) => {
-    const response = await api.post(`${AUTH_ENDPOINT}/register`, userData);
-    return response.data;
-  },
+| Component | Mô tả |
+|-----------|-------|
+| `AuthContext` | React Context quản lý state user, login, logout |
+| `ProtectedRoute` | Component bảo vệ routes, kiểm tra đăng nhập và roles |
+| `LoginPage` | Trang đăng nhập với form username/password |
+| `RegisterPage` | Trang đăng ký với form thông tin user và chọn role |
+| `Navbar` | Thanh navigation hiển thị menu theo role user |
 
-  getCurrentUser: () => {
-    const userStr = localStorage.getItem('user');
-    return userStr ? JSON.parse(userStr) : null;
-  },
+### Phân Quyền Routes Frontend
 
-  isAuthenticated: () => {
-    return !!localStorage.getItem('authToken');
-  },
-};
+| Route Pattern | Roles được phép | Mô tả |
+|---------------|-----------------|-------|
+| `/login`, `/register` | Public | Không cần đăng nhập |
+| `/admin/*` | ADMIN | Trang quản trị |
+| `/teacher/*` | ADMIN, TEACHER | Trang giáo viên |
+| `/student/*` | ADMIN, TEACHER, STUDENT | Trang học viên |
+| `/profile` | Authenticated | Trang cá nhân |
 
-export default authService;
-```
+### API Endpoints Authentication
 
-### 3. Protected Route Component
+| Method | Endpoint | Input | Output |
+|--------|----------|-------|--------|
+| POST | `/api/auth/login` | `{username, password}` | `{accessToken, id, username, email, roles}` |
+| POST | `/api/auth/register` | `{username, email, password, fullName, phone, roles[]}` | `{message}` |
+| POST | `/api/auth/logout` | - | `{message}` |
+| GET | `/api/auth/me` | - | `{id, username, email, fullName, roles[]}` |
 
-```javascript
-import { Navigate, Outlet } from 'react-router-dom';
-import authService from '@/services/authService';
+### Lưu Trữ Token
 
-const ProtectedRoute = () => {
-  if (!authService.isAuthenticated()) {
-    return <Navigate to="/login" replace />;
-  }
-  return <Outlet />;
-};
-
-export default ProtectedRoute;
-```
+- **accessToken**: Lưu trong `localStorage`, gửi trong header `Authorization: Bearer <token>`
+- **User info**: Lưu trong `localStorage` để hiển thị thông tin user
 
 ---
+
+
 
 ## ⚠️ Xử Lý Lỗi Đồng Bộ
 

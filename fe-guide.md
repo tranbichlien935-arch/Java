@@ -38,7 +38,376 @@
 
 ---
 
-## 🛠️ Công Nghệ Sử Dụng
+## � Danh Sách Các Trang (Pages)
+
+### 1. Nhóm Trang Dùng Chung (Public/Common)
+
+Những trang này dành cho tất cả người dùng hoặc là điểm vào hệ thống.
+
+#### 🔐 Trang Login (Đăng Nhập)
+
+| Mục | Chi tiết |
+|-----|----------|
+| **Route** | `/login` |
+| **Quyền truy cập** | Public (ai cũng truy cập được) |
+| **Mục đích** | Xác thực người dùng bằng Username/Password |
+
+**Tính năng:**
+- Form đăng nhập với validation (username required, password min 6 ký tự)
+- Hiển thị lỗi khi sai thông tin đăng nhập
+- Remember me (tùy chọn lưu phiên đăng nhập)
+- Link chuyển đến trang Đăng ký
+
+**Rules:**
+- Sau khi đăng nhập thành công → Redirect theo role:
+  - `ROLE_ADMIN` → `/admin/dashboard`
+  - `ROLE_TEACHER` → `/teacher/dashboard`
+  - `ROLE_STUDENT` → `/student/dashboard`
+- Nếu đã đăng nhập mà vào `/login` → Redirect về Dashboard tương ứng
+- Lưu accessToken vào localStorage sau khi login
+
+---
+
+#### 👤 Trang Profile (Thông Tin Cá Nhân)
+
+| Mục | Chi tiết |
+|-----|----------|
+| **Route** | `/profile` |
+| **Quyền truy cập** | Authenticated (tất cả user đã đăng nhập) |
+| **Mục đích** | Xem và cập nhật thông tin cá nhân |
+
+**Tính năng:**
+- Hiển thị thông tin user hiện tại (họ tên, email, phone, avatar)
+- Form chỉnh sửa thông tin cá nhân
+- Chức năng đổi mật khẩu (yêu cầu nhập mật khẩu cũ)
+- Upload/thay đổi avatar
+
+**Rules:**
+- User chỉ được sửa thông tin của chính mình
+- Không được sửa username và email (chỉ xem)
+- Đổi mật khẩu phải nhập đúng mật khẩu cũ
+- Mật khẩu mới tối thiểu 6 ký tự
+
+---
+
+### 2. Nhóm Trang Dành Cho ADMIN (Quản Trị Viên)
+
+Đây là nơi Admin quản lý toàn bộ hệ thống với quyền CRUD đầy đủ.
+
+#### 📊 Dashboard Admin
+
+| Mục | Chi tiết |
+|-----|----------|
+| **Route** | `/admin/dashboard` |
+| **Quyền truy cập** | ADMIN only |
+| **Mục đích** | Tổng quan nhanh về hệ thống |
+
+**Tính năng:**
+- Thống kê tổng số: Học viên, Giáo viên, Khóa học, Lớp học
+- Biểu đồ doanh thu tháng này (line chart hoặc bar chart)
+- Danh sách học viên mới đăng ký gần đây (5-10 người)
+- Danh sách lớp học sắp đầy sỉ số
+- Quick actions: Thêm khóa học mới, thêm user, xem báo cáo
+
+**Rules:**
+- Dữ liệu phải được cập nhật realtime hoặc refresh khi vào trang
+- Các số liệu có thể click để xem chi tiết
+
+---
+
+#### 📚 Quản Lý Khóa Học (Courses)
+
+| Mục | Chi tiết |
+|-----|----------|
+| **Route** | `/admin/courses` |
+| **Quyền truy cập** | ADMIN only |
+| **Mục đích** | CRUD khóa học trong hệ thống |
+
+**Tính năng:**
+- Danh sách tất cả khóa học (table với phân trang)
+- Tìm kiếm theo tên, mã khóa học
+- Lọc theo trạng thái (Active/Inactive), trình độ
+- Thêm khóa học mới (tên, mô tả, giá tiền, thời lượng, trình độ)
+- Sửa thông tin khóa học
+- Xóa khóa học (soft delete - đổi trạng thái thành Inactive)
+
+**Rules:**
+- Không được xóa khóa học đang có lớp học Active
+- Giá tiền phải là số dương
+- Tên khóa học unique trong hệ thống
+
+---
+
+#### 🏫 Quản Lý Lớp Học (Classes)
+
+| Mục | Chi tiết |
+|-----|----------|
+| **Route** | `/admin/classes` |
+| **Quyền truy cập** | ADMIN only |
+| **Mục đích** | Tạo lớp học từ khóa học, gán giáo viên |
+
+**Tính năng:**
+- Danh sách tất cả lớp học (table với phân trang)
+- Tạo lớp mới: Chọn khóa học → Gán giáo viên → Đặt sỉ số tối đa (`max_students`)
+- Thiết lập lịch học (ngày, giờ bắt đầu, giờ kết thúc)
+- Xem danh sách học viên trong lớp
+- Đóng/Mở đăng ký lớp học
+
+**Rules:**
+- Mỗi lớp phải gán 1 giáo viên (required)
+- `max_students` phải là số nguyên dương (mặc định: 30)
+- Không được xóa lớp đã có học viên đăng ký
+- Giáo viên không được dạy 2 lớp trùng lịch
+
+---
+
+#### 👥 Quản Lý Người Dùng (Users)
+
+| Mục | Chi tiết |
+|-----|----------|
+| **Route** | `/admin/users` |
+| **Quyền truy cập** | ADMIN only |
+| **Mục đích** | Quản lý tài khoản Giáo viên và Học viên |
+
+**Tính năng:**
+- Danh sách tất cả users (table với phân trang)
+- Lọc theo Role (Teacher/Student), trạng thái (Active/Inactive)
+- Tìm kiếm theo tên, email, username
+- Thêm user mới (với role Teacher hoặc Student)
+- Sửa thông tin user
+- Active/Deactivate tài khoản
+- Reset mật khẩu user
+
+**Rules:**
+- Admin không thể xóa chính mình
+- User bị Deactive không thể đăng nhập
+- Reset mật khẩu → gửi password mới về email (hoặc hiện popup)
+
+---
+
+#### 📈 Thống Kê & Báo Cáo
+
+| Mục | Chi tiết |
+|-----|----------|
+| **Route** | `/admin/reports` |
+| **Quyền truy cập** | ADMIN only |
+| **Mục đích** | Xem thống kê và báo cáo chi tiết |
+
+**Tính năng:**
+- Biểu đồ doanh thu theo tháng/quý/năm
+- Danh sách học viên mới đăng ký (có lọc theo khoảng thời gian)
+- Danh sách các lớp đã đầy sỉ số
+- Thống kê số lượng đăng ký theo từng khóa học
+- Export báo cáo ra Excel/PDF (tùy chọn)
+
+**Rules:**
+- Có thể filter theo khoảng thời gian (từ ngày - đến ngày)
+- Dữ liệu phải chính xác với database
+
+---
+
+### 3. Nhóm Trang Dành Cho GIÁO VIÊN (Teacher)
+
+Tập trung vào nghiệp vụ giảng dạy và quản lý lớp.
+
+#### 📊 Dashboard Giáo Viên
+
+| Mục | Chi tiết |
+|-----|----------|
+| **Route** | `/teacher/dashboard` |
+| **Quyền truy cập** | ADMIN, TEACHER |
+| **Mục đích** | Xem tổng quan lịch dạy |
+
+**Tính năng:**
+- Lịch dạy trong ngày/tuần (calendar view hoặc list view)
+- Số lớp đang phụ trách
+- Thông báo: Lớp sắp bắt đầu, bài tập cần chấm
+- Quick access: Điểm danh hôm nay, Nhập điểm
+
+**Rules:**
+- Chỉ hiển thị các lớp mà giáo viên đó được gán
+- Lịch tự động highlight lớp học hôm nay
+
+---
+
+#### 📖 Quản Lý Lớp Dạy
+
+| Mục | Chi tiết |
+|-----|----------|
+| **Route** | `/teacher/classes` |
+| **Quyền truy cập** | ADMIN, TEACHER |
+| **Mục đích** | Xem danh sách lớp mình đang phụ trách |
+
+**Tính năng:**
+- Danh sách các lớp đang dạy (card hoặc table view)
+- Xem chi tiết từng lớp: Thông tin khóa học, sỉ số hiện tại, lịch học
+- Xem danh sách học viên trong lớp
+- Truy cập nhanh đến Điểm danh hoặc Nhập điểm của lớp
+
+**Rules:**
+- Teacher chỉ thấy các lớp được gán cho mình
+- Không được sửa thông tin lớp (chỉ Admin có quyền)
+
+---
+
+#### ✅ Điểm Danh (Attendance)
+
+| Mục | Chi tiết |
+|-----|----------|
+| **Route** | `/teacher/attendance` |
+| **Quyền truy cập** | ADMIN, TEACHER |
+| **Mục đích** | Điểm danh học viên theo buổi học |
+
+**Tính năng:**
+- Chọn lớp → Chọn ngày/buổi học
+- Hiển thị danh sách học viên của lớp đó
+- Checkbox để đánh dấu: Có mặt / Vắng / Có phép
+- Ghi chú cho từng học viên (nếu cần)
+- Nút Lưu để submit attendance
+
+**Rules:**
+- Mỗi buổi học chỉ điểm danh 1 lần (có thể sửa lại)
+- Teacher chỉ điểm danh được lớp của mình
+- Lưu lại lịch sử điểm danh
+
+---
+
+#### 📝 Nhập Điểm (Grading)
+
+| Mục | Chi tiết |
+|-----|----------|
+| **Route** | `/teacher/grading` |
+| **Quyền truy cập** | ADMIN, TEACHER |
+| **Mục đích** | Nhập điểm và nhận xét cho học viên |
+
+**Tính năng:**
+- Chọn lớp → Hiển thị danh sách học viên
+- Nhập điểm số (0-10 hoặc theo thang điểm tùy chỉnh)
+- Nhập nhận xét/comment cho từng học viên
+- Các loại điểm: Điểm giữa kỳ, Điểm cuối kỳ, Điểm chuyên cần, Điểm tổng kết
+- Nút Lưu để submit grades
+
+**Rules:**
+- Teacher chỉ nhập điểm được lớp của mình
+- Điểm phải trong khoảng hợp lệ (0-10)
+- Có thể sửa điểm sau khi đã nhập
+- Điểm tổng kết có thể tính tự động theo công thức
+
+---
+
+### 4. Nhóm Trang Dành Cho HỌC VIÊN (Student)
+
+Giao diện thân thiện, dễ dùng cho học viên.
+
+#### 🔍 Tìm Kiếm Khóa Học
+
+| Mục | Chi tiết |
+|-----|----------|
+| **Route** | `/student/courses` hoặc `/courses` |
+| **Quyền truy cập** | Authenticated users |
+| **Mục đích** | Tìm và duyệt các khóa học đang mở |
+
+**Tính năng:**
+- Danh sách các khóa học đang mở đăng ký (card view)
+- Bộ lọc: Theo trình độ (Cơ bản, Nâng cao), theo khoảng giá
+- Tìm kiếm theo tên khóa học
+- Sắp xếp: Mới nhất, Giá thấp-cao, Phổ biến nhất
+- Click vào khóa học để xem chi tiết
+
+**Rules:**
+- Chỉ hiển thị khóa học có trạng thái Active
+- Hiển thị badge "Sắp hết chỗ" nếu lớp gần đầy sỉ số
+
+---
+
+#### 📋 Chi Tiết & Đăng Ký Khóa Học
+
+| Mục | Chi tiết |
+|-----|----------|
+| **Route** | `/student/courses/:id` hoặc `/courses/:id` |
+| **Quyền truy cập** | Authenticated users |
+| **Mục đích** | Xem chi tiết và đăng ký học |
+
+**Tính năng:**
+- Thông tin đầy đủ khóa học: Mô tả, thời lượng, giá, trình độ
+- Danh sách các lớp đang mở của khóa học này
+- Hiển thị sỉ số còn trống của mỗi lớp (`current_students / max_students`)
+- Nút "Đăng Ký" cho từng lớp
+- Hiển thị tên giáo viên và lịch học của lớp
+
+**Rules:**
+- **Kiểm tra sỉ số**: Nếu `current_students >= max_students` → Disable nút đăng ký, hiện "Lớp đã đầy"
+- Học viên không được đăng ký trùng lớp đã có
+- Sau khi đăng ký thành công → Hiện thông báo và redirect về Thời khóa biểu
+
+---
+
+#### 📅 Thời Khóa Biểu Cá Nhân
+
+| Mục | Chi tiết |
+|-----|----------|
+| **Route** | `/student/schedule` |
+| **Quyền truy cập** | ADMIN, TEACHER, STUDENT |
+| **Mục đích** | Xem lịch học của các lớp đã đăng ký |
+
+**Tính năng:**
+- Hiển thị calendar view (tuần/tháng) với các buổi học
+- List view: Danh sách tất cả lớp đã đăng ký
+- Thông tin mỗi lớp: Tên khóa, giáo viên, phòng học, giờ học
+- Filter theo tuần hiện tại / tuần tới
+- Highlight các buổi học hôm nay
+
+**Rules:**
+- Chỉ hiển thị lịch của các lớp mà student đã đăng ký thành công
+- Có thể hủy đăng ký lớp (nếu lớp chưa bắt đầu)
+
+---
+
+#### 📊 Kết Quả Học Tập
+
+| Mục | Chi tiết |
+|-----|----------|
+| **Route** | `/student/grades` |
+| **Quyền truy cập** | ADMIN, TEACHER, STUDENT |
+| **Mục đích** | Xem điểm số và nhận xét |
+
+**Tính năng:**
+- Danh sách các lớp đã/đang học
+- Xem điểm từng lớp: Điểm chuyên cần, giữa kỳ, cuối kỳ, tổng kết
+- Xem nhận xét từ giáo viên
+- Xem lịch sử điểm danh (số buổi vắng)
+- Xem lịch sử đóng học phí (đã đóng/chưa đóng)
+
+**Rules:**
+- Student chỉ xem được điểm của chính mình
+- Điểm chỉ hiển thị khi giáo viên đã nhập
+
+---
+
+### 📋 Tổng Hợp Routes
+
+| Route | Trang | Roles |
+|-------|-------|-------|
+| `/login` | Đăng nhập | Public |
+| `/register` | Đăng ký | Public |
+| `/profile` | Thông tin cá nhân | All authenticated |
+| `/admin/dashboard` | Dashboard Admin | ADMIN |
+| `/admin/courses` | Quản lý khóa học | ADMIN |
+| `/admin/classes` | Quản lý lớp học | ADMIN |
+| `/admin/users` | Quản lý người dùng | ADMIN |
+| `/admin/reports` | Thống kê báo cáo | ADMIN |
+| `/teacher/dashboard` | Dashboard Giáo viên | ADMIN, TEACHER |
+| `/teacher/classes` | Lớp đang dạy | ADMIN, TEACHER |
+| `/teacher/attendance` | Điểm danh | ADMIN, TEACHER |
+| `/teacher/grading` | Nhập điểm | ADMIN, TEACHER |
+| `/student/courses` | Tìm khóa học | All authenticated |
+| `/student/courses/:id` | Chi tiết & Đăng ký | All authenticated |
+| `/student/schedule` | Thời khóa biểu | All authenticated |
+| `/student/grades` | Kết quả học tập | All authenticated |
+
+---
+
+## �🛠️ Công Nghệ Sử Dụng
 
 ### Core Technologies
 
