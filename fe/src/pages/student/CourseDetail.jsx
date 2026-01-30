@@ -7,6 +7,7 @@ import { useAuth } from '@context/AuthContext';
 import courseService from '@services/courseService';
 import classService from '@services/classService';
 import enrollmentService from '@services/enrollmentService';
+import axios from 'axios';  // ← THÊM import axios
 import { toast } from 'react-toastify';
 
 const CourseDetail = () => {
@@ -17,10 +18,27 @@ const CourseDetail = () => {
     const [classes, setClasses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [enrolling, setEnrolling] = useState(null);
+    const [studentId, setStudentId] = useState(null); // ← THÊM STATE studentId
 
     useEffect(() => {
         fetchCourseAndClasses();
-    }, [id]);
+        // Fetch studentId nếu user là student
+        if (user && user.role === 'ROLE_STUDENT') {
+            fetchStudentId();
+        }
+    }, [id, user]);
+
+    const fetchStudentId = async () => {
+        try {
+            // Gọi API để lấy student ID từ userId
+            const response = await axios.get('/api/students/user/' + user.id);
+            setStudentId(response.data.id);
+        } catch (error) {
+            console.error('Cannot fetch student ID:', error);
+            // Fallback: dùng userId (backend sẽ tự convert)
+            setStudentId(user.id);
+        }
+    };
 
     const fetchCourseAndClasses = async () => {
         try {
@@ -39,10 +57,15 @@ const CourseDetail = () => {
     };
 
     const handleEnroll = async (classId) => {
+        if (!studentId) {
+            toast.error('Không thể lấy thông tin học viên. Vui lòng đăng nhập lại.');
+            return;
+        }
+
         try {
             setEnrolling(classId);
             await enrollmentService.createEnrollment({
-                studentId: user.id,
+                studentId: studentId,  // ← DÙNG studentId thực, không phải user.id
                 classId,
             });
             toast.success('Đăng ký thành công!');

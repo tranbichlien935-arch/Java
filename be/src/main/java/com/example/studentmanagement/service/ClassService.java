@@ -56,11 +56,23 @@ public class ClassService {
         }
         Course course = courseRepository.findById(request.getCourseId())
                 .orElseThrow(() -> new ResourceNotFoundException("Course", "id", request.getCourseId()));
-        Teacher teacher = null;
+
+        // AUTO-CONVERT: Nếu teacherId không tồn tại, có thể đây là userId
+        final Teacher teacher;
         if (request.getTeacherId() != null) {
-            teacher = teacherRepository.findById(request.getTeacherId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Teacher", "id", request.getTeacherId()));
+            final Long teacherId = request.getTeacherId();
+            if (!teacherRepository.existsById(teacherId)) {
+                // Thử tìm teacher bằng userId
+                teacher = teacherRepository.findByUserId(teacherId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Teacher", "id", teacherId));
+            } else {
+                teacher = teacherRepository.findById(teacherId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Teacher", "id", teacherId));
+            }
+        } else {
+            teacher = null;
         }
+
         ClassEntity classEntity = ClassEntity.builder()
                 .code(request.getCode())
                 .name(request.getName())
@@ -86,8 +98,17 @@ public class ClassService {
         if (request.getName() != null)
             classEntity.setName(request.getName());
         if (request.getTeacherId() != null) {
-            Teacher teacher = teacherRepository.findById(request.getTeacherId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Teacher", "id", request.getTeacherId()));
+            // AUTO-CONVERT: Nếu teacherId không tồn tại, có thể đây là userId
+            final Long teacherId = request.getTeacherId();
+            final Teacher teacher;
+            if (!teacherRepository.existsById(teacherId)) {
+                // Thử tìm teacher bằng userId
+                teacher = teacherRepository.findByUserId(teacherId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Teacher", "id", teacherId));
+            } else {
+                teacher = teacherRepository.findById(teacherId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Teacher", "id", teacherId));
+            }
             classEntity.setTeacher(teacher);
         }
         if (request.getMaxStudents() != null)

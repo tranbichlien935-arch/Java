@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Login API</title>
+</head>
+<body>
+    <h1>Test Login API</h1>
+    <div id="result"></div>
+    
+    <script>
+        async function testLogin() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>Testing login...</p>';
+            
+            try {
+                const response = await fetch('http://localhost:8080/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <h2 style="color: green;">✅ SUCCESS!</h2>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                        <hr>
+                        <p><strong>accessToken:</strong> ${data.accessToken ? '✅ Có token' : '❌ KHÔNG có token'}</p>
+                        <p><strong>username:</strong> ${data.username}</p>
+                        <p><strong>roles:</strong> ${data.roles}</p>
+                         `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <h2 style="color: red;">❌ FAILED</h2>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h2 style="color: red;">❌ ERROR</h2>
+                    <p>${error.message}</p>
+                    <hr>
+                    <p><strong>Có thể:</strong></p>
+                    <ul>
+                        <li>Backend chưa chạy (http://localhost:8080)</li>
+                        <li>CORS chưa được config</li>
+                        <li>MySQL chưa chạy</li>
+                    </ul>
+                `;
+            }
+        }
+        
+        // Auto test khi load page
+        window.onload = testLogin;
+    </script>
+</body>
+</html>

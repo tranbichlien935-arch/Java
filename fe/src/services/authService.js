@@ -30,11 +30,18 @@ export const authService = {
             });
 
             const data = response.data;
+            console.log('Login response:', data); // DEBUG
+
+            // Handle both 'token' and 'accessToken' from backend
+            const token = data.accessToken || data.token;
+
+            if (!token) {
+                console.error('No token in response:', data);
+                throw new Error('Login response missing token');
+            }
 
             // Save token to localStorage
-            if (data.accessToken) {
-                localStorage.setItem('accessToken', data.accessToken);
-            }
+            localStorage.setItem('accessToken', token);
 
             // Create user object from response
             const user = {
@@ -47,9 +54,11 @@ export const authService = {
             };
 
             localStorage.setItem('user', JSON.stringify(user));
+            console.log('Login successful, user:', user); // DEBUG
 
-            return { accessToken: data.accessToken, user };
+            return { accessToken: token, user };
         } catch (error) {
+            console.error('Login error:', error.response?.data || error.message);
             throw error;
         }
     },

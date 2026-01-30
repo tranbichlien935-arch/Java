@@ -19,9 +19,26 @@ const TeacherDashboard = () => {
     const fetchStats = async () => {
         try {
             setLoading(true);
-            const data = await dashboardService.getTeacherStats(user.id);
+
+            // Get teacherId from userId (similar to CourseDetail fix)
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/teachers/me`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch teacher info');
+            }
+
+            const teacherData = await response.json();
+            const teacherId = teacherData.id;
+
+            // Now fetch stats with teacherId
+            const data = await dashboardService.getTeacherStats(teacherId);
             setStats(data);
         } catch (error) {
+            console.error('Error fetching stats:', error);
             toast.error('Không thể tải dữ liệu');
         } finally {
             setLoading(false);

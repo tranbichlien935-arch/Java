@@ -1,6 +1,7 @@
 package com.example.studentmanagement.service;
 
 import com.example.studentmanagement.dto.request.TeacherRequest;
+import com.example.studentmanagement.dto.response.ClassResponse;
 import com.example.studentmanagement.dto.response.TeacherResponse;
 import com.example.studentmanagement.entity.Role;
 import com.example.studentmanagement.entity.Teacher;
@@ -12,9 +13,12 @@ import com.example.studentmanagement.repository.RoleRepository;
 import com.example.studentmanagement.repository.TeacherRepository;
 import com.example.studentmanagement.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.studentmanagement.security.UserDetailsImpl;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -44,6 +48,20 @@ public class TeacherService {
     public TeacherResponse getTeacherByEmployeeCode(String employeeCode) {
         Teacher teacher = teacherRepository.findByEmployeeCode(employeeCode)
                 .orElseThrow(() -> new ResourceNotFoundException("Teacher", "employeeCode", employeeCode));
+        return mapToResponse(teacher);
+    }
+
+    @Transactional(readOnly = true)
+    public TeacherResponse getCurrentTeacher() {
+        // Get current authenticated user
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        Long userId = userDetails.getId();
+
+        // Find teacher by userId
+        Teacher teacher = teacherRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Teacher not found for current user"));
+
         return mapToResponse(teacher);
     }
 
@@ -134,6 +152,27 @@ public class TeacherService {
 
     private TeacherResponse mapToResponse(Teacher teacher) {
         User user = teacher.getUser();
+
+        // Map classes if available
+        List<ClassResponse> classResponses = teacher.getClasses() != null
+                ? teacher.getClasses().stream()
+                        .map(classEntity -> ClassResponse.builder()
+                                .id(classEntity.getId())
+                                .code(classEntity.getCode())
+                                .name(classEntity.getName())
+                                .courseName(classEntity.getCourse() != null ? classEntity.getCourse().getName() : null)
+                                .courseId(classEntity.getCourse() != null ? classEntity.getCourse().getId() : null)
+                                .maxStudents(classEntity.getMaxStudents())
+                                .currentStudents(classEntity.getCurrentStudents())
+                                .status(classEntity.getStatus())
+                                .room(classEntity.getRoom())
+                                .schedule(classEntity.getSchedule())
+                                .startDate(classEntity.getStartDate())
+                                .endDate(classEntity.getEndDate())
+                                .build())
+                        .collect(Collectors.toList())
+                : List.of();
+
         return TeacherResponse.builder()
                 .id(teacher.getId())
                 .employeeCode(teacher.getEmployeeCode())
@@ -148,6 +187,7 @@ public class TeacherService {
                 .fullName(user.getFullName())
                 .phone(user.getPhone())
                 .avatarUrl(user.getAvatarUrl())
+                .classes(classResponses)
                 .build();
     }
 

@@ -30,6 +30,12 @@ public class TeacherController {
         return ResponseEntity.ok(teacherService.getTeacherById(id));
     }
 
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<TeacherResponse> getCurrentTeacher() {
+        return ResponseEntity.ok(teacherService.getCurrentTeacher());
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<TeacherResponse> createTeacher(@Valid @RequestBody TeacherRequest request) {

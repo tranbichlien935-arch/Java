@@ -48,11 +48,28 @@ public class EnrollmentService {
 
     @Transactional
     public EnrollmentResponse createEnrollment(EnrollmentRequest request) {
-        if (enrollmentRepository.existsByStudentIdAndClassEntityId(request.getStudentId(), request.getClassId())) {
+        // AUTO-CONVERT: Nếu frontend gửi userId, tự động tìm studentId
+        final Long studentId;
+        Long requestStudentId = request.getStudentId();
+
+        // Nếu studentId không tồn tại trong bảng students, có thể đây là userId
+        if (requestStudentId != null && !studentRepository.existsById(requestStudentId)) {
+            // Thử tìm student bằng userId
+            Student studentByUserId = studentRepository.findByUserId(requestStudentId).orElse(null);
+            if (studentByUserId != null) {
+                studentId = studentByUserId.getId();
+            } else {
+                studentId = requestStudentId; // Fallback to original ID
+            }
+        } else {
+            studentId = requestStudentId;
+        }
+
+        if (enrollmentRepository.existsByStudentIdAndClassEntityId(studentId, request.getClassId())) {
             throw new DuplicateResourceException("Student is already enrolled in this class");
         }
-        Student student = studentRepository.findById(request.getStudentId())
-                .orElseThrow(() -> new ResourceNotFoundException("Student", "id", request.getStudentId()));
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student", "id", studentId));
         ClassEntity classEntity = classRepository.findById(request.getClassId())
                 .orElseThrow(() -> new ResourceNotFoundException("Class", "id", request.getClassId()));
 

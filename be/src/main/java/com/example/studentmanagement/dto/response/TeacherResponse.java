@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -25,4 +26,7 @@ public class TeacherResponse {
     private String fullName;
     private String phone;
     private String avatarUrl;
+
+    // Danh sách lớp học được gán cho giáo viên
+    private List<ClassResponse> classes;
 }
