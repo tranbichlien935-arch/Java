@@ -5,7 +5,6 @@ com\example\studentmanagement\entity\ClassEntity$ClassEntityBuilder.class
 com\example\studentmanagement\controller\StudentController.class
 com\example\studentmanagement\dto\request\CreateUserRequest.class
 com\example\studentmanagement\config\CorsConfig.class
-com\example\studentmanagement\service\UserService.class
 com\example\studentmanagement\dto\response\GradeResponse.class
 com\example\studentmanagement\dto\response\PaymentResponse.class
 com\example\studentmanagement\dto\response\TeacherDashboardResponse.class

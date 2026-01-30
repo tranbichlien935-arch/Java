@@ -68,4 +68,10 @@ public class ClassController {
     public ResponseEntity<List<ClassResponse>> getClassesByStatus(@PathVariable ClassStatus status) {
         return ResponseEntity.ok(classService.getClassesByStatus(status));
     }
+
+    @GetMapping("/{id}/students")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<?> getStudentsInClass(@PathVariable Long id) {
+        return ResponseEntity.ok(classService.getStudentsInClass(id));
+    }
 }

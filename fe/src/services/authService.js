@@ -50,7 +50,9 @@ export const authService = {
                 email: data.email,
                 fullName: data.fullName,
                 role: data.roles && data.roles.length > 0 ? data.roles[0] : null,
-                roles: data.roles || []
+                roles: data.roles || [],
+                teacherId: data.teacherId || null,  // Thêm teacherId từ backend
+                studentId: data.studentId || null   // Thêm studentId từ backend
             };
 
             localStorage.setItem('user', JSON.stringify(user));

@@ -10,9 +10,7 @@ const Profile = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [isChangingPassword, setIsChangingPassword] = useState(false);
     const [formData, setFormData] = useState({
-        firstName: user?.firstName || '',
-        lastName: user?.lastName || '',
-        email: user?.email || '',
+        fullName: user?.fullName || '',
         phone: user?.phone || '',
     });
     const [passwordData, setPasswordData] = useState({
@@ -91,13 +89,13 @@ const Profile = () => {
                     <div className="card text-center">
                         <div className="relative inline-block">
                             <div className="w-32 h-32 mx-auto bg-gradient-to-br from-primary to-primary-dark rounded-full flex items-center justify-center text-white text-4xl font-bold">
-                                {user?.firstName?.[0]}{user?.lastName?.[0]}
+                                {user?.fullName?.split(' ').slice(0, 2).map(word => word[0]).join('')}
                             </div>
                             <button className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-md hover:shadow-lg transition-shadow">
                                 <FaCamera className="text-primary" />
                             </button>
                         </div>
-                        <h3 className="text-xl font-bold mt-4">{user?.firstName} {user?.lastName}</h3>
+                        <h3 className="text-xl font-bold mt-4">{user?.fullName}</h3>
                         <p className="text-gray-600 text-sm">@{user?.username}</p>
                         <div className="mt-4">
                             <span className="badge badge-primary">{user?.role?.replace('ROLE_', '')}</span>
@@ -120,36 +118,12 @@ const Profile = () => {
 
                         {isEditing ? (
                             <form onSubmit={handleUpdateProfile} className="space-y-4">
-                                <div className="grid md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="form-label">Họ</label>
-                                        <input
-                                            type="text"
-                                            name="firstName"
-                                            value={formData.firstName}
-                                            onChange={handleChange}
-                                            className="form-input"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="form-label">Tên</label>
-                                        <input
-                                            type="text"
-                                            name="lastName"
-                                            value={formData.lastName}
-                                            onChange={handleChange}
-                                            className="form-input"
-                                            required
-                                        />
-                                    </div>
-                                </div>
                                 <div>
-                                    <label className="form-label">Email</label>
+                                    <label className="form-label">Họ và tên</label>
                                     <input
-                                        type="email"
-                                        name="email"
-                                        value={formData.email}
+                                        type="text"
+                                        name="fullName"
+                                        value={formData.fullName}
                                         onChange={handleChange}
                                         className="form-input"
                                         required

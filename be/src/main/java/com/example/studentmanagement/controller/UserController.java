@@ -25,6 +25,22 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
+    @GetMapping("/profile")
+    public ResponseEntity<UserResponse> getProfile() {
+        return ResponseEntity.ok(userService.getCurrentUserProfile());
+    }
+
+    @PutMapping("/profile")
+    public ResponseEntity<UserResponse> updateProfile(@Valid @RequestBody UserRequest request) {
+        return ResponseEntity.ok(userService.updateCurrentUserProfile(request));
+    }
+
+    @PutMapping("/change-password")
+    public ResponseEntity<MessageResponse> changePassword(
+            @RequestBody com.example.studentmanagement.dto.request.ChangePasswordRequest request) {
+        return ResponseEntity.ok(userService.changePassword(request));
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {

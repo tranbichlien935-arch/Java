@@ -3,11 +3,13 @@ import { useSearchParams } from 'react-router-dom';
 import { FaSave } from 'react-icons/fa';
 import Layout from '@components/layout/Layout';
 import Loading from '@components/common/Loading';
+import { useAuth } from '@context/AuthContext';
 import classService from '@services/classService';
 import gradeService from '@services/gradeService';
 import { toast } from 'react-toastify';
 
 const Grading = () => {
+    const { user } = useAuth();
     const [searchParams] = useSearchParams();
     const [classes, setClasses] = useState([]);
     const [selectedClass, setSelectedClass] = useState(searchParams.get('classId') || '');
@@ -28,7 +30,9 @@ const Grading = () => {
 
     const fetchClasses = async () => {
         try {
-            const data = await classService.getAllClasses(); // Or getClassesByTeacher(userId)
+            // Load chỉ classes của teacher hiện tại
+            const teacherId = user.teacherId || user.id;
+            const data = await classService.getClassesByTeacher(teacherId);
             setClasses(data);
         } catch (error) {
             toast.error('Không thể tải danh sách lớp học');

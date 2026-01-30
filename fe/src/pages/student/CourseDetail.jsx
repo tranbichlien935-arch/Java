@@ -7,7 +7,6 @@ import { useAuth } from '@context/AuthContext';
 import courseService from '@services/courseService';
 import classService from '@services/classService';
 import enrollmentService from '@services/enrollmentService';
-import axios from 'axios';  // ← THÊM import axios
 import { toast } from 'react-toastify';
 
 const CourseDetail = () => {
@@ -18,27 +17,16 @@ const CourseDetail = () => {
     const [classes, setClasses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [enrolling, setEnrolling] = useState(null);
-    const [studentId, setStudentId] = useState(null); // ← THÊM STATE studentId
+    const [studentId, setStudentId] = useState(null); // Student ID từ user.studentId
 
     useEffect(() => {
         fetchCourseAndClasses();
-        // Fetch studentId nếu user là student
+        // Lấy studentId từ user object
         if (user && user.role === 'ROLE_STUDENT') {
-            fetchStudentId();
+            // Sử dụng studentId từ login response
+            setStudentId(user.studentId || user.id);
         }
     }, [id, user]);
-
-    const fetchStudentId = async () => {
-        try {
-            // Gọi API để lấy student ID từ userId
-            const response = await axios.get('/api/students/user/' + user.id);
-            setStudentId(response.data.id);
-        } catch (error) {
-            console.error('Cannot fetch student ID:', error);
-            // Fallback: dùng userId (backend sẽ tự convert)
-            setStudentId(user.id);
-        }
-    };
 
     const fetchCourseAndClasses = async () => {
         try {

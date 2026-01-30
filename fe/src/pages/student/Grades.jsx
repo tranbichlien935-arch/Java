@@ -19,7 +19,9 @@ const Grades = () => {
     const fetchGrades = async () => {
         try {
             setLoading(true);
-            const data = await gradeService.getGradesByStudent(user.id);
+            // Sử dụng studentId thay vì user.id
+            const studentId = user.studentId || user.id;
+            const data = await gradeService.getGradesByStudent(studentId);
             setGrades(data);
         } catch (error) {
             toast.error('Không thể tải kết quả học tập');

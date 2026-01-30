@@ -18,7 +18,9 @@ const Schedule = () => {
     const fetchSchedule = async () => {
         try {
             setLoading(true);
-            const data = await enrollmentService.getStudentSchedule(user.id);
+            // Sử dụng studentId thay vì user.id
+            const studentId = user.studentId || user.id;
+            const data = await enrollmentService.getStudentSchedule(studentId);
             setSchedule(data);
         } catch (error) {
             toast.error('Không thể tải lịch học');

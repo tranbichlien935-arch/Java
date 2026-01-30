@@ -10,6 +10,7 @@ C:\Users\admin\Desktop\Code\HK5\java\du_an_cuoi_khoa\be\src\main\java\com\exampl
 C:\Users\admin\Desktop\Code\HK5\java\du_an_cuoi_khoa\be\src\main\java\com\example\studentmanagement\controller\StudentController.java
 C:\Users\admin\Desktop\Code\HK5\java\du_an_cuoi_khoa\be\src\main\java\com\example\studentmanagement\entity\Course.java
 C:\Users\admin\Desktop\Code\HK5\java\du_an_cuoi_khoa\be\src\main\java\com\example\studentmanagement\exception\BadRequestException.java
+C:\Users\admin\Desktop\Code\HK5\java\du_an_cuoi_khoa\be\src\main\java\com\example\studentmanagement\dto\request\ChangePasswordRequest.java
 C:\Users\admin\Desktop\Code\HK5\java\du_an_cuoi_khoa\be\src\main\java\com\example\studentmanagement\controller\DashboardController.java
 C:\Users\admin\Desktop\Code\HK5\java\du_an_cuoi_khoa\be\src\main\java\com\example\studentmanagement\entity\enums\EnrollmentStatus.java
 C:\Users\admin\Desktop\Code\HK5\java\du_an_cuoi_khoa\be\src\main\java\com\example\studentmanagement\dto\request\CreateUserRequest.java

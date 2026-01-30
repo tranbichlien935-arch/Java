@@ -19,9 +19,13 @@ const TeacherClasses = () => {
     const fetchClasses = async () => {
         try {
             setLoading(true);
-            const data = await classService.getClassesByTeacher(user.id);
+            // Sử dụng teacherId thay vì user.id
+            const teacherId = user.teacherId || user.id;
+            console.log('Fetching classes for teacherId:', teacherId); // DEBUG
+            const data = await classService.getClassesByTeacher(teacherId);
             setClasses(data);
         } catch (error) {
+            console.error('Error fetching classes:', error); // DEBUG
             toast.error('Không thể tải danh sách lớp học');
         } finally {
             setLoading(false);
@@ -45,8 +49,15 @@ const TeacherClasses = () => {
                                     <h3 className="text-xl font-bold text-gray-900">{classItem.name}</h3>
                                     <p className="text-gray-600 text-sm mt-1">{classItem.courseName}</p>
                                 </div>
-                                <span className={`badge ${classItem.status === 'Open' ? 'badge-success' : 'badge-danger'}`}>
-                                    {classItem.status === 'Open' ? 'Đang mở' : 'Đã đóng'}
+                                <span className={`badge ${classItem.status === 'OPEN' ? 'badge-success' :
+                                        classItem.status === 'IN_PROGRESS' ? 'badge-primary' :
+                                            classItem.status === 'COMPLETED' ? 'badge-secondary' :
+                                                'badge-danger'
+                                    }`}>
+                                    {classItem.status === 'OPEN' ? 'Đang mở' :
+                                        classItem.status === 'IN_PROGRESS' ? 'Đang học' :
+                                            classItem.status === 'COMPLETED' ? 'Hoàn thành' :
+                                                'Đã hủy'}
                                 </span>
                             </div>
 

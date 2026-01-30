@@ -50,8 +50,25 @@ public class AuthService {
                 .map(item -> item.getAuthority())
                 .collect(Collectors.toList());
 
+        // Query teacherId hoặc studentId dựa trên role
+        Long teacherId = null;
+        Long studentId = null;
+
+        User user = userRepository.findById(userDetails.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        // Nếu user có role TEACHER, lấy teacherId
+        if (roles.contains("ROLE_TEACHER")) {
+            teacherId = user.getTeacher() != null ? user.getTeacher().getId() : null;
+        }
+
+        // Nếu user có role STUDENT, lấy studentId
+        if (roles.contains("ROLE_STUDENT")) {
+            studentId = user.getStudent() != null ? user.getStudent().getId() : null;
+        }
+
         return new JwtResponse(jwt, userDetails.getId(), userDetails.getUsername(),
-                userDetails.getEmail(), userDetails.getFullName(), roles);
+                userDetails.getEmail(), userDetails.getFullName(), roles, teacherId, studentId);
     }
 
     @Transactional

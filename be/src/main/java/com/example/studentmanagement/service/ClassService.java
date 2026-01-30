@@ -4,7 +4,9 @@ import com.example.studentmanagement.dto.request.ClassRequest;
 import com.example.studentmanagement.dto.response.ClassResponse;
 import com.example.studentmanagement.entity.ClassEntity;
 import com.example.studentmanagement.entity.Course;
+import com.example.studentmanagement.entity.Student;
 import com.example.studentmanagement.entity.Teacher;
+import com.example.studentmanagement.entity.User;
 import com.example.studentmanagement.entity.enums.ClassStatus;
 import com.example.studentmanagement.exception.DuplicateResourceException;
 import com.example.studentmanagement.exception.ResourceNotFoundException;
@@ -150,6 +152,29 @@ public class ClassService {
     @Transactional(readOnly = true)
     public List<ClassResponse> getClassesByStatus(ClassStatus status) {
         return classRepository.findByStatus(status).stream().map(this::mapToResponse).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<?> getStudentsInClass(Long classId) {
+        // Lấy class để verify nó tồn tại
+        ClassEntity classEntity = classRepository.findById(classId)
+                .orElseThrow(() -> new ResourceNotFoundException("Class", "id", classId));
+
+        // Lấy students thông qua enrollments
+        return classEntity.getEnrollments().stream()
+                .filter(enrollment -> enrollment.getStudent() != null)
+                .map(enrollment -> {
+                    Student student = enrollment.getStudent();
+                    User user = student.getUser();
+                    // Tạo simple student response
+                    return java.util.Map.of(
+                            "id", student.getId(),
+                            "firstName", user.getFullName().split(" ")[0],
+                            "lastName", user.getFullName().substring(user.getFullName().indexOf(" ") + 1),
+                            "email", user.getEmail(),
+                            "studentCode", student.getStudentCode());
+                })
+                .collect(Collectors.toList());
     }
 
     private ClassResponse mapToResponse(ClassEntity classEntity) {

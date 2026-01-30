@@ -190,6 +190,68 @@ public class UserService {
         return convertToResponse(updatedUser);
     }
 
+    @Transactional(readOnly = true)
+    public UserResponse getCurrentUserProfile() {
+        org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication();
+
+        com.example.studentmanagement.security.UserDetailsImpl userDetails = (com.example.studentmanagement.security.UserDetailsImpl) authentication
+                .getPrincipal();
+
+        User user = userRepository.findById(userDetails.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        return convertToResponse(user);
+    }
+
+    @Transactional
+    public UserResponse updateCurrentUserProfile(UserRequest request) {
+        org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication();
+
+        com.example.studentmanagement.security.UserDetailsImpl userDetails = (com.example.studentmanagement.security.UserDetailsImpl) authentication
+                .getPrincipal();
+
+        User user = userRepository.findById(userDetails.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (request.getFullName() != null) {
+            user.setFullName(request.getFullName());
+        }
+        if (request.getPhone() != null) {
+            user.setPhone(request.getPhone());
+        }
+        if (request.getAvatarUrl() != null) {
+            user.setAvatarUrl(request.getAvatarUrl());
+        }
+
+        User updatedUser = userRepository.save(user);
+        return convertToResponse(updatedUser);
+    }
+
+    @Transactional
+    public MessageResponse changePassword(com.example.studentmanagement.dto.request.ChangePasswordRequest request) {
+        org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication();
+
+        com.example.studentmanagement.security.UserDetailsImpl userDetails = (com.example.studentmanagement.security.UserDetailsImpl) authentication
+                .getPrincipal();
+
+        User user = userRepository.findById(userDetails.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        // Verify old password
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new com.example.studentmanagement.exception.BadRequestException("Old password is incorrect");
+        }
+
+        // Update password
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        return MessageResponse.success("Password changed successfully");
+    }
+
     private UserResponse convertToResponse(User user) {
         List<String> roles = user.getRoles().stream()
                 .map(role -> role.getName().name())
