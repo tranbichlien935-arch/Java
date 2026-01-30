@@ -23,6 +23,7 @@ const Classes = () => {
         courseId: '',
         teacherId: '',
         maxStudents: 30,
+        room: '',
         schedule: '',
         startDate: '',
         endDate: '',
@@ -80,6 +81,7 @@ const Classes = () => {
                 courseId: '',
                 teacherId: '',
                 maxStudents: 30,
+                room: '',
                 schedule: '',
                 startDate: '',
                 endDate: '',
@@ -187,8 +189,15 @@ const Classes = () => {
                                     </td>
                                     <td className="text-sm">{classItem.schedule}</td>
                                     <td>
-                                        <span className={`badge ${classItem.status === 'OPEN' ? 'badge-success' : 'badge-danger'}`}>
-                                            {classItem.status === 'OPEN' ? 'Đang mở' : 'Đã đóng'}
+                                        <span className={`badge ${classItem.status === 'OPEN' ? 'badge-success' :
+                                                classItem.status === 'IN_PROGRESS' ? 'badge-primary' :
+                                                    classItem.status === 'COMPLETED' ? 'badge-secondary' :
+                                                        'badge-danger'
+                                            }`}>
+                                            {classItem.status === 'OPEN' ? 'Đang mở' :
+                                                classItem.status === 'IN_PROGRESS' ? 'Đang học' :
+                                                    classItem.status === 'COMPLETED' ? 'Đã kết thúc' :
+                                                        classItem.status === 'CANCELLED' ? 'Đã hủy' : classItem.status}
                                         </span>
                                     </td>
                                     <td>
@@ -305,6 +314,17 @@ const Classes = () => {
                             />
                         </div>
                         <div>
+                            <label className="form-label">Phòng học</label>
+                            <input
+                                type="text"
+                                name="room"
+                                value={formData.room}
+                                onChange={handleChange}
+                                className="form-input"
+                                placeholder="VD: P101, A201"
+                            />
+                        </div>
+                        <div>
                             <label className="form-label">Trạng thái</label>
                             <select
                                 name="status"
@@ -312,8 +332,10 @@ const Classes = () => {
                                 onChange={handleChange}
                                 className="form-input"
                             >
-                                <option value="Open">Đang mở</option>
-                                <option value="Closed">Đã đóng</option>
+                                <option value="OPEN">Đang mở</option>
+                                <option value="IN_PROGRESS">Đang học</option>
+                                <option value="COMPLETED">Đã kết thúc</option>
+                                <option value="CANCELLED">Đã hủy</option>
                             </select>
                         </div>
                     </div>

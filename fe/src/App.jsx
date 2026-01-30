@@ -15,6 +15,7 @@ import AdminDashboard from './pages/admin/Dashboard';
 import AdminCourses from './pages/admin/Courses';
 import AdminClasses from './pages/admin/Classes';
 import AdminUsers from './pages/admin/Users';
+import EnrollmentManagement from './pages/admin/EnrollmentManagement';
 
 // Teacher Pages
 import TeacherDashboard from './pages/teacher/Dashboard';
@@ -78,6 +79,14 @@ function App() {
                             element={
                                 <ProtectedRoute requiredRole="ROLE_ADMIN">
                                     <AdminUsers />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/admin/enrollments"
+                            element={
+                                <ProtectedRoute requiredRole="ROLE_ADMIN">
+                                    <EnrollmentManagement />
                                 </ProtectedRoute>
                             }
                         />

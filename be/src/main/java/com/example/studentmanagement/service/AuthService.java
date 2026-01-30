@@ -6,11 +6,15 @@ import com.example.studentmanagement.dto.response.JwtResponse;
 import com.example.studentmanagement.dto.response.MessageResponse;
 import com.example.studentmanagement.dto.response.UserResponse;
 import com.example.studentmanagement.entity.Role;
+import com.example.studentmanagement.entity.Student;
+import com.example.studentmanagement.entity.Teacher;
 import com.example.studentmanagement.entity.User;
 import com.example.studentmanagement.entity.enums.RoleName;
 import com.example.studentmanagement.exception.DuplicateResourceException;
 import com.example.studentmanagement.exception.ResourceNotFoundException;
 import com.example.studentmanagement.repository.RoleRepository;
+import com.example.studentmanagement.repository.StudentRepository;
+import com.example.studentmanagement.repository.TeacherRepository;
 import com.example.studentmanagement.repository.UserRepository;
 import com.example.studentmanagement.security.JwtUtils;
 import com.example.studentmanagement.security.UserDetailsImpl;
@@ -23,6 +27,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -35,6 +40,8 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final StudentRepository studentRepository;
+    private final TeacherRepository teacherRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
 
@@ -119,8 +126,44 @@ public class AuthService {
         }
 
         user.setRoles(roles);
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        // Auto-create Student or Teacher record based on role
+        for (Role role : roles) {
+            if (role.getName() == RoleName.ROLE_STUDENT) {
+                // Create Student record
+                String studentCode = generateStudentCode();
+                Student student = Student.builder()
+                        .user(savedUser)
+                        .studentCode(studentCode)
+                        .enrollmentDate(LocalDate.now())
+                        .build();
+                studentRepository.save(student);
+                System.out.println("Created student record with code: " + studentCode);
+            } else if (role.getName() == RoleName.ROLE_TEACHER) {
+                // Create Teacher record
+                String employeeCode = generateEmployeeCode();
+                Teacher teacher = Teacher.builder()
+                        .user(savedUser)
+                        .employeeCode(employeeCode)
+                        .hireDate(LocalDate.now())
+                        .build();
+                teacherRepository.save(teacher);
+                System.out.println("Created teacher record with code: " + employeeCode);
+            }
+        }
+
         return MessageResponse.success("User registered successfully!");
+    }
+
+    private String generateStudentCode() {
+        long count = studentRepository.count();
+        return String.format("STU%05d", count + 1);
+    }
+
+    private String generateEmployeeCode() {
+        long count = teacherRepository.count();
+        return String.format("TCH%05d", count + 1);
     }
 
     public UserResponse getCurrentUser() {

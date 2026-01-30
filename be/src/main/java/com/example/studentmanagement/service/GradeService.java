@@ -26,11 +26,13 @@ public class GradeService {
     private final EnrollmentRepository enrollmentRepository;
     private final UserRepository userRepository;
 
+    @Transactional(readOnly = true)
     public List<GradeResponse> getGradesByStudentId(Long studentId) {
         return gradeRepository.findByStudentId(studentId).stream().map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<GradeResponse> getGradesByClassId(Long classId) {
         return gradeRepository.findByClassId(classId).stream().map(this::mapToResponse).collect(Collectors.toList());
     }

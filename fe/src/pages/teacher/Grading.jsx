@@ -51,11 +51,11 @@ const Grading = () => {
                 const gradesMap = {};
                 gradesData.forEach(grade => {
                     gradesMap[grade.studentId] = {
-                        midterm: grade.midterm || '',
-                        final: grade.final || '',
-                        attendance: grade.attendance || '',
-                        total: grade.total || '',
-                        comments: grade.comments || '',
+                        midterm: grade.midtermScore || '',
+                        final: grade.finalScore || '',
+                        attendance: grade.attendanceScore || '',
+                        total: grade.totalScore || '',
+                        comments: grade.comment || '',
                     };
                 });
                 setGrades(gradesMap);
@@ -81,32 +81,24 @@ const Grading = () => {
     };
 
     const handleGradeChange = (studentId, field, value) => {
-        setGrades(prev => ({
-            ...prev,
-            [studentId]: { ...prev[studentId], [field]: value },
-        }));
+        setGrades(prev => {
+            const studentGrades = { ...prev[studentId], [field]: value };
 
-        // Auto-calculate total if midterm, final, or attendance changes
-        if (['midterm', 'final', 'attendance'].includes(field)) {
-            setTimeout(() => {
-                calculateTotal(studentId);
-            }, 100);
-        }
-    };
+            // Auto-calculate total if midterm, final, or attendance changes
+            if (['midterm', 'final', 'attendance'].includes(field)) {
+                const midterm = parseFloat(studentGrades.midterm) || 0;
+                const final = parseFloat(studentGrades.final) || 0;
+                const attendance = parseFloat(studentGrades.attendance) || 0;
 
-    const calculateTotal = (studentId) => {
-        const grade = grades[studentId];
-        const midterm = parseFloat(grade.midterm) || 0;
-        const final = parseFloat(grade.final) || 0;
-        const attendance = parseFloat(grade.attendance) || 0;
+                // Formula: Total = (Attendance * 0.2) + (Midterm * 0.3) + (Final * 0.5)
+                studentGrades.total = (attendance * 0.2 + midterm * 0.3 + final * 0.5).toFixed(2);
+            }
 
-        // Formula: Total = (Midterm * 0.3) + (Final * 0.5) + (Attendance * 0.2)
-        const total = (midterm * 0.3 + final * 0.5 + attendance * 0.2).toFixed(2);
-
-        setGrades(prev => ({
-            ...prev,
-            [studentId]: { ...prev[studentId], total },
-        }));
+            return {
+                ...prev,
+                [studentId]: studentGrades
+            };
+        });
     };
 
     const handleSave = async () => {
@@ -117,18 +109,21 @@ const Grading = () => {
 
         setSaving(true);
         try {
-            const gradeRecords = students.map(student => ({
-                classId: selectedClass,
-                studentId: student.id,
-                midterm: parseFloat(grades[student.id]?.midterm) || 0,
-                final: parseFloat(grades[student.id]?.final) || 0,
-                attendance: parseFloat(grades[student.id]?.attendance) || 0,
-                total: parseFloat(grades[student.id]?.total) || 0,
-                comments: grades[student.id]?.comments || '',
-            }));
+            // Send each grade individually
+            for (const student of students) {
+                const gradeData = {
+                    enrollmentId: student.enrollmentId,
+                    midtermScore: parseFloat(grades[student.id]?.midterm) || null,
+                    finalScore: parseFloat(grades[student.id]?.final) || null,
+                    attendanceScore: parseFloat(grades[student.id]?.attendance) || null,
+                    comment: grades[student.id]?.comments || null,
+                };
+                await gradeService.saveGrade(gradeData);
+            }
 
-            await gradeService.saveGrade({ records: gradeRecords });
             toast.success('Lưu điểm thành công!');
+            // Refresh data to ensure sync with server
+            fetchStudentsAndGrades();
         } catch (error) {
             toast.error(error.response?.data?.message || 'Lưu điểm thất bại!');
         } finally {

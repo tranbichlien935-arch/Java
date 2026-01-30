@@ -45,6 +45,11 @@ const CourseDetail = () => {
     };
 
     const handleEnroll = async (classId) => {
+        console.log('=== DEBUG ENROLLMENT ===');
+        console.log('User object:', user);
+        console.log('Student ID:', studentId);
+        console.log('Class ID:', classId);
+
         if (!studentId) {
             toast.error('Không thể lấy thông tin học viên. Vui lòng đăng nhập lại.');
             return;
@@ -52,13 +57,16 @@ const CourseDetail = () => {
 
         try {
             setEnrolling(classId);
-            await enrollmentService.createEnrollment({
-                studentId: studentId,  // ← DÙNG studentId thực, không phải user.id
+            const enrollmentData = {
+                studentId: studentId,
                 classId,
-            });
+            };
+            console.log('Sending enrollment data:', enrollmentData);
+            await enrollmentService.createEnrollment(enrollmentData);
             toast.success('Đăng ký thành công!');
             navigate('/student/schedule');
         } catch (error) {
+            console.error('Enrollment error:', error.response?.data);
             toast.error(error.response?.data?.message || 'Đăng ký thất bại!');
         } finally {
             setEnrolling(null);

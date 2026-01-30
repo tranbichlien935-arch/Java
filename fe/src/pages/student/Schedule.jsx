@@ -21,7 +21,9 @@ const Schedule = () => {
             // Sử dụng studentId thay vì user.id
             const studentId = user.studentId || user.id;
             const data = await enrollmentService.getStudentSchedule(studentId);
-            setSchedule(data);
+            // Filter only CONFIRMED enrollments
+            const confirmedEnrollments = data.filter(item => item.status === 'CONFIRMED');
+            setSchedule(confirmedEnrollments);
         } catch (error) {
             toast.error('Không thể tải lịch học');
         } finally {
@@ -57,8 +59,15 @@ const Schedule = () => {
                                 <div className="flex-1">
                                     <div className="flex items-center gap-3 mb-3">
                                         <h3 className="text-xl font-bold text-gray-900">{item.className}</h3>
-                                        <span className={`badge ${item.status === 'Active' ? 'badge-success' : 'badge-warning'}`}>
-                                            {item.status === 'Active' ? 'Đang học' : 'Chưa bắt đầu'}
+                                        <span className={`badge ${item.classStatus === 'IN_PROGRESS' ? 'badge-success' :
+                                            item.classStatus === 'OPEN' ? 'badge-warning' :
+                                                item.classStatus === 'COMPLETED' ? 'badge-secondary' :
+                                                    'badge-danger'
+                                            }`}>
+                                            {item.classStatus === 'IN_PROGRESS' ? 'Đang học' :
+                                                item.classStatus === 'OPEN' ? 'Chưa bắt đầu' :
+                                                    item.classStatus === 'COMPLETED' ? 'Đã kết thúc' :
+                                                        item.classStatus === 'CANCELLED' ? 'Đã hủy' : item.classStatus}
                                         </span>
                                     </div>
 
@@ -84,6 +93,14 @@ const Schedule = () => {
                                             <div>
                                                 <p className="text-sm text-gray-500">Lịch học</p>
                                                 <p className="font-medium">{item.schedule || 'Chưa cập nhật'}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-2 text-gray-600">
+                                            <FaClock className="text-primary" />
+                                            <div>
+                                                <p className="text-sm text-gray-500">Phòng học</p>
+                                                <p className="font-medium">{item.room || 'Chưa xác định'}</p>
                                             </div>
                                         </div>
                                     </div>

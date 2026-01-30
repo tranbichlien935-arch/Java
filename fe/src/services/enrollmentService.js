@@ -33,6 +33,14 @@ export const enrollmentService = {
         return response.data;
     },
 
+    // Update enrollment status
+    updateEnrollmentStatus: async (id, status) => {
+        const response = await api.patch(`${ENROLLMENT_ENDPOINT}/${id}/status`, null, {
+            params: { status }
+        });
+        return response.data;
+    },
+
     // Get enrollments by student
     getEnrollmentsByStudent: async (studentId) => {
         const response = await api.get(`${ENROLLMENT_ENDPOINT}/student/${studentId}`);

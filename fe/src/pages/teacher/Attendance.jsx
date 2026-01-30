@@ -61,7 +61,7 @@ const Attendance = () => {
                 // No existing attendance, initialize empty
                 const initialData = {};
                 studentsData.forEach(student => {
-                    initialData[student.id] = { status: 'Present', notes: '' };
+                    initialData[student.id] = { status: 'PRESENT', notes: '' };
                 });
                 setAttendanceData(initialData);
             }
@@ -94,15 +94,18 @@ const Attendance = () => {
 
         setSaving(true);
         try {
-            const attendanceRecords = students.map(student => ({
-                classId: selectedClass,
-                studentId: student.id,
-                date: selectedDate,
-                status: attendanceData[student.id]?.status || 'Present',
-                notes: attendanceData[student.id]?.notes || '',
-            }));
+            // Send each attendance record individually
+            for (const student of students) {
+                const attendanceRecord = {
+                    classId: selectedClass,
+                    studentId: student.id,
+                    sessionDate: selectedDate,
+                    status: attendanceData[student.id]?.status || 'PRESENT',
+                    note: attendanceData[student.id]?.notes || null,
+                };
+                await attendanceService.takeAttendance(attendanceRecord);
+            }
 
-            await attendanceService.takeAttendance({ records: attendanceRecords });
             toast.success('Lưu điểm danh thành công!');
         } catch (error) {
             toast.error(error.response?.data?.message || 'Lưu điểm danh thất bại!');
@@ -177,8 +180,8 @@ const Attendance = () => {
                                                     <input
                                                         type="radio"
                                                         name={`attendance-${student.id}`}
-                                                        checked={attendanceData[student.id]?.status === 'Present'}
-                                                        onChange={() => handleStatusChange(student.id, 'Present')}
+                                                        checked={attendanceData[student.id]?.status === 'PRESENT'}
+                                                        onChange={() => handleStatusChange(student.id, 'PRESENT')}
                                                         className="w-5 h-5 text-success cursor-pointer"
                                                     />
                                                 </td>
@@ -186,8 +189,8 @@ const Attendance = () => {
                                                     <input
                                                         type="radio"
                                                         name={`attendance-${student.id}`}
-                                                        checked={attendanceData[student.id]?.status === 'Absent'}
-                                                        onChange={() => handleStatusChange(student.id, 'Absent')}
+                                                        checked={attendanceData[student.id]?.status === 'ABSENT'}
+                                                        onChange={() => handleStatusChange(student.id, 'ABSENT')}
                                                         className="w-5 h-5 text-danger cursor-pointer"
                                                     />
                                                 </td>
@@ -195,8 +198,8 @@ const Attendance = () => {
                                                     <input
                                                         type="radio"
                                                         name={`attendance-${student.id}`}
-                                                        checked={attendanceData[student.id]?.status === 'Excused'}
-                                                        onChange={() => handleStatusChange(student.id, 'Excused')}
+                                                        checked={attendanceData[student.id]?.status === 'EXCUSED'}
+                                                        onChange={() => handleStatusChange(student.id, 'EXCUSED')}
                                                         className="w-5 h-5 text-warning cursor-pointer"
                                                     />
                                                 </td>

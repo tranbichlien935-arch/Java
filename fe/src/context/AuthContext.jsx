@@ -32,8 +32,16 @@ export const AuthProvider = ({ children }) => {
     };
 
     const updateUser = (userData) => {
-        setUser(userData);
-        localStorage.setItem('user', JSON.stringify(userData));
+        // Merge with existing user to preserve role, teacherId, studentId from login
+        const mergedUser = {
+            ...user,           // Keep existing data (role, teacherId, studentId)
+            ...userData,       // Update with new data
+            role: user?.role,  // Preserve role string from login
+            teacherId: user?.teacherId,  // Preserve teacherId
+            studentId: user?.studentId,  // Preserve studentId
+        };
+        setUser(mergedUser);
+        localStorage.setItem('user', JSON.stringify(mergedUser));
     };
 
     const hasRole = (role) => {

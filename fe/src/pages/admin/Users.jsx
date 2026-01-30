@@ -350,11 +350,17 @@ const Users = () => {
                                 onChange={(e) => setFormData(prev => ({ ...prev, roles: [e.target.value] }))}
                                 className="form-input"
                                 required
+                                disabled={!!editingUser}
                             >
                                 <option value="ROLE_STUDENT">Học viên</option>
                                 <option value="ROLE_TEACHER">Giáo viên</option>
                                 <option value="ROLE_ADMIN">Admin</option>
                             </select>
+                            {editingUser && (
+                                <p className="text-sm text-warning mt-1">
+                                    ⚠️ Không thể thay đổi vai trò sau khi tạo tài khoản
+                                </p>
+                            )}
                         </div>
                         <div>
                             <label className="form-label">Trạng thái</label>

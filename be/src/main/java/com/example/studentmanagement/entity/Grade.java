@@ -66,12 +66,15 @@ public class Grade {
     }
 
     public void calculateTotalScore() {
-        if (attendanceScore != null && midtermScore != null && finalScore != null) {
-            // total_score = (attendance * 0.1) + (midterm * 0.3) + (final * 0.6)
-            BigDecimal attendancePart = attendanceScore.multiply(new BigDecimal("0.1"));
-            BigDecimal midtermPart = midtermScore.multiply(new BigDecimal("0.3"));
-            BigDecimal finalPart = finalScore.multiply(new BigDecimal("0.6"));
-            this.totalScore = attendancePart.add(midtermPart).add(finalPart);
-        }
+        // weights: attendance 20%, midterm 30%, final 50%
+        BigDecimal attendance = attendanceScore != null ? attendanceScore : BigDecimal.ZERO;
+        BigDecimal midterm = midtermScore != null ? midtermScore : BigDecimal.ZERO;
+        BigDecimal finalS = finalScore != null ? finalScore : BigDecimal.ZERO;
+
+        BigDecimal attendancePart = attendance.multiply(new BigDecimal("0.2"));
+        BigDecimal midtermPart = midterm.multiply(new BigDecimal("0.3"));
+        BigDecimal finalPart = finalS.multiply(new BigDecimal("0.5"));
+
+        this.totalScore = attendancePart.add(midtermPart).add(finalPart);
     }
 }

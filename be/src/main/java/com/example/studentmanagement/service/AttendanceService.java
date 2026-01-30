@@ -48,29 +48,36 @@ public class AttendanceService {
 
     @Transactional
     public AttendanceResponse markAttendance(AttendanceRequest request) {
-        if (attendanceRepository.findByClassEntityIdAndStudentIdAndSessionDate(
-                request.getClassId(), request.getStudentId(), request.getSessionDate()).isPresent()) {
-            throw new DuplicateResourceException("Attendance already marked for this student on this date");
+        Attendance attendance = attendanceRepository.findByClassEntityIdAndStudentIdAndSessionDate(
+                request.getClassId(), request.getStudentId(), request.getSessionDate()).orElse(null);
+
+        if (attendance != null) {
+            attendance.setStatus(request.getStatus());
+            attendance.setNote(request.getNote());
+            attendance.setSessionNumber(request.getSessionNumber());
+            attendance.setMarkedAt(LocalDateTime.now());
+        } else {
+            ClassEntity classEntity = classRepository.findById(request.getClassId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Class", "id", request.getClassId()));
+            Student student = studentRepository.findById(request.getStudentId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Student", "id", request.getStudentId()));
+
+            UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication()
+                    .getPrincipal();
+            User markedBy = userRepository.findById(userDetails.getId()).orElse(null);
+
+            attendance = Attendance.builder()
+                    .classEntity(classEntity)
+                    .student(student)
+                    .sessionDate(request.getSessionDate())
+                    .sessionNumber(request.getSessionNumber())
+                    .status(request.getStatus())
+                    .note(request.getNote())
+                    .markedBy(markedBy)
+                    .markedAt(LocalDateTime.now())
+                    .build();
         }
-        ClassEntity classEntity = classRepository.findById(request.getClassId())
-                .orElseThrow(() -> new ResourceNotFoundException("Class", "id", request.getClassId()));
-        Student student = studentRepository.findById(request.getStudentId())
-                .orElseThrow(() -> new ResourceNotFoundException("Student", "id", request.getStudentId()));
 
-        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication()
-                .getPrincipal();
-        User markedBy = userRepository.findById(userDetails.getId()).orElse(null);
-
-        Attendance attendance = Attendance.builder()
-                .classEntity(classEntity)
-                .student(student)
-                .sessionDate(request.getSessionDate())
-                .sessionNumber(request.getSessionNumber())
-                .status(request.getStatus())
-                .note(request.getNote())
-                .markedBy(markedBy)
-                .markedAt(LocalDateTime.now())
-                .build();
         attendance = attendanceRepository.save(attendance);
         return mapToResponse(attendance);
     }

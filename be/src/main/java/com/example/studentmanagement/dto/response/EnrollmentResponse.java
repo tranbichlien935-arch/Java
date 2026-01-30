@@ -1,10 +1,12 @@
 package com.example.studentmanagement.dto.response;
 
+import com.example.studentmanagement.entity.enums.ClassStatus;
 import com.example.studentmanagement.entity.enums.EnrollmentStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -23,4 +25,12 @@ public class EnrollmentResponse {
     private String classCode;
     private String className;
     private String courseName;
+
+    // Class details
+    private String teacherName;
+    private ClassStatus classStatus;
+    private String schedule;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private String room;
 }

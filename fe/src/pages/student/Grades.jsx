@@ -62,11 +62,11 @@ const Grades = () => {
                                     <p className="text-gray-600">{record.courseName}</p>
                                 </div>
                                 <div className="text-right">
-                                    <p className={`text-3xl font-bold ${getGradeColor(record.total)}`}>
-                                        {record.total?.toFixed(2) || 'N/A'}
+                                    <p className={`text-3xl font-bold ${getGradeColor(record.totalScore)}`}>
+                                        {record.totalScore?.toFixed(2) || '0.00'}
                                     </p>
-                                    <p className={`text-sm font-medium ${getGradeColor(record.total)}`}>
-                                        {getGradeLabel(record.total)}
+                                    <p className={`text-sm font-medium ${getGradeColor(record.totalScore)}`}>
+                                        {getGradeLabel(record.totalScore)}
                                     </p>
                                 </div>
                             </div>
@@ -79,7 +79,7 @@ const Grades = () => {
                                         <span className="text-sm text-gray-600">Điểm giữa kỳ (30%)</span>
                                     </div>
                                     <p className="text-2xl font-bold text-primary">
-                                        {record.midterm?.toFixed(1) || 'N/A'}
+                                        {record.midtermScore?.toFixed(1) || '0.0'}
                                     </p>
                                 </div>
 
@@ -89,7 +89,7 @@ const Grades = () => {
                                         <span className="text-sm text-gray-600">Điểm cuối kỳ (50%)</span>
                                     </div>
                                     <p className="text-2xl font-bold text-success">
-                                        {record.final?.toFixed(1) || 'N/A'}
+                                        {record.finalScore?.toFixed(1) || '0.0'}
                                     </p>
                                 </div>
 
@@ -99,16 +99,16 @@ const Grades = () => {
                                         <span className="text-sm text-gray-600">Chuyên cần (20%)</span>
                                     </div>
                                     <p className="text-2xl font-bold text-warning">
-                                        {record.attendance?.toFixed(1) || 'N/A'}
+                                        {record.attendanceScore?.toFixed(1) || '0.0'}
                                     </p>
                                 </div>
                             </div>
 
                             {/* Teacher Comments */}
-                            {record.comments && (
+                            {record.comment && (
                                 <div className="bg-gray-50 rounded-lg p-4 mb-4">
                                     <p className="text-sm text-gray-600 mb-1">Nhận xét từ giáo viên:</p>
-                                    <p className="text-gray-800 italic">"{record.comments}"</p>
+                                    <p className="text-gray-800 italic">"{record.comment}"</p>
                                 </div>
                             )}
 

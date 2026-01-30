@@ -46,6 +46,10 @@ const Navbar = () => {
                                         <FaUsers />
                                         <span className="hidden md:block">Người dùng</span>
                                     </Link>
+                                    <Link to="/admin/enrollments" className="flex items-center gap-2 text-gray-700 hover:text-primary transition-colors">
+                                        <FaClipboardList />
+                                        <span className="hidden md:block">Đăng ký</span>
+                                    </Link>
                                 </>
                             )}
 

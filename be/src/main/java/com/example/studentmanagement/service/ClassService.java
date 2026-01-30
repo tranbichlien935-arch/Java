@@ -8,6 +8,7 @@ import com.example.studentmanagement.entity.Student;
 import com.example.studentmanagement.entity.Teacher;
 import com.example.studentmanagement.entity.User;
 import com.example.studentmanagement.entity.enums.ClassStatus;
+import com.example.studentmanagement.entity.enums.EnrollmentStatus;
 import com.example.studentmanagement.exception.DuplicateResourceException;
 import com.example.studentmanagement.exception.ResourceNotFoundException;
 import com.example.studentmanagement.repository.ClassRepository;
@@ -162,13 +163,15 @@ public class ClassService {
 
         // Lấy students thông qua enrollments
         return classEntity.getEnrollments().stream()
-                .filter(enrollment -> enrollment.getStudent() != null)
+                .filter(enrollment -> enrollment.getStudent() != null
+                        && enrollment.getStatus() == EnrollmentStatus.CONFIRMED)
                 .map(enrollment -> {
                     Student student = enrollment.getStudent();
                     User user = student.getUser();
-                    // Tạo simple student response
+                    // Tạo simple student response với enrollmentId
                     return java.util.Map.of(
                             "id", student.getId(),
+                            "enrollmentId", enrollment.getId(),
                             "firstName", user.getFullName().split(" ")[0],
                             "lastName", user.getFullName().substring(user.getFullName().indexOf(" ") + 1),
                             "email", user.getEmail(),
