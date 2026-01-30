@@ -6,7 +6,7 @@ import com.example.studentmanagement.entity.Attendance;
 import com.example.studentmanagement.entity.ClassEntity;
 import com.example.studentmanagement.entity.Student;
 import com.example.studentmanagement.entity.User;
-import com.example.studentmanagement.exception.DuplicateResourceException;
+
 import com.example.studentmanagement.exception.ResourceNotFoundException;
 import com.example.studentmanagement.repository.AttendanceRepository;
 import com.example.studentmanagement.repository.ClassRepository;

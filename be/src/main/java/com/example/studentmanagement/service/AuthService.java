@@ -158,12 +158,22 @@ public class AuthService {
 
     private String generateStudentCode() {
         long count = studentRepository.count();
-        return String.format("STU%05d", count + 1);
+        String code;
+        do {
+            count++;
+            code = String.format("STU%05d", count);
+        } while (studentRepository.existsByStudentCode(code));
+        return code;
     }
 
     private String generateEmployeeCode() {
         long count = teacherRepository.count();
-        return String.format("TCH%05d", count + 1);
+        String code;
+        do {
+            count++;
+            code = String.format("TCH%05d", count);
+        } while (teacherRepository.existsByEmployeeCode(code));
+        return code;
     }
 
     public UserResponse getCurrentUser() {

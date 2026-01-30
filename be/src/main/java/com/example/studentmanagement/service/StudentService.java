@@ -152,7 +152,12 @@ public class StudentService {
     }
 
     private String generateStudentCode() {
-        long count = studentRepository.count() + 1;
-        return String.format("SV%06d", count);
+        long count = studentRepository.count();
+        String code;
+        do {
+            count++;
+            code = String.format("STU%05d", count);
+        } while (studentRepository.existsByStudentCode(code));
+        return code;
     }
 }

@@ -107,7 +107,7 @@ public class UserService {
                 com.example.studentmanagement.entity.Teacher teacher = com.example.studentmanagement.entity.Teacher
                         .builder()
                         .user(savedUser)
-                        .employeeCode("EMP" + savedUser.getId()) // Auto-generate employee code
+                        .employeeCode(generateEmployeeCode())
                         .build();
                 teacherRepository.save(teacher);
             } else if (roleName.toUpperCase().contains("STUDENT")) {
@@ -115,7 +115,7 @@ public class UserService {
                 com.example.studentmanagement.entity.Student student = com.example.studentmanagement.entity.Student
                         .builder()
                         .user(savedUser)
-                        .studentCode("STU" + savedUser.getId()) // Auto-generate student code
+                        .studentCode(generateStudentCode())
                         .build();
                 studentRepository.save(student);
             }
@@ -250,6 +250,26 @@ public class UserService {
         userRepository.save(user);
 
         return MessageResponse.success("Password changed successfully");
+    }
+
+    private String generateStudentCode() {
+        long count = studentRepository.count();
+        String code;
+        do {
+            count++;
+            code = String.format("STU%05d", count);
+        } while (studentRepository.existsByStudentCode(code));
+        return code;
+    }
+
+    private String generateEmployeeCode() {
+        long count = teacherRepository.count();
+        String code;
+        do {
+            count++;
+            code = String.format("TCH%05d", count);
+        } while (teacherRepository.existsByEmployeeCode(code));
+        return code;
     }
 
     private UserResponse convertToResponse(User user) {

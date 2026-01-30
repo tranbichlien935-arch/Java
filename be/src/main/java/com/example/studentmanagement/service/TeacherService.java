@@ -192,7 +192,12 @@ public class TeacherService {
     }
 
     private String generateEmployeeCode() {
-        long count = teacherRepository.count() + 1;
-        return String.format("GV%06d", count);
+        long count = teacherRepository.count();
+        String code;
+        do {
+            count++;
+            code = String.format("TCH%05d", count);
+        } while (teacherRepository.existsByEmployeeCode(code));
+        return code;
     }
 }
